@@ -113,3 +113,17 @@ button.dark-mode {
 .theme-switch input {
     margin-right: 10px;
 }
+
+footer {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    color: #fff; /* Witte tekst voor de footer */
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+body.dark-mode footer {
+    color: #e0e0e0; /* Lichtere kleur voor de footer in donkere modus */
+}
