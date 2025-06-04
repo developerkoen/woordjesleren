@@ -335,11 +335,12 @@
         // Initialiseer Firebase en authenticatie
         async function initializeFirebase() {
             try {
+                // Initialiseer Firebase app met de configuratie van de Canvas omgeving
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Meld aan met aangepaste token of anoniem
+                // Meld aan met aangepaste token (indien beschikbaar) of anoniem
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
@@ -372,7 +373,7 @@
             } catch (error) {
                 console.error("Fout bij initialiseren Firebase:", error);
                 authMessage.textContent = `Fout: ${error.message}`;
-                authMessage.style.color = 'red';
+                authMessage.className = 'mt-6 text-sm auth-message-error';
             }
         }
 
@@ -394,6 +395,17 @@
         }
 
         // --- Authenticatie Functies ---
+        // Functie om de authMessage te wissen
+        function clearAuthMessage() {
+            authMessage.textContent = '';
+            authMessage.className = 'mt-6 text-sm'; // Reset class
+        }
+
+        // Voeg event listeners toe om de authMessage te wissen bij input focus
+        emailInput.addEventListener('focus', clearAuthMessage);
+        passwordInput.addEventListener('focus', clearAuthMessage);
+
+
         loginBtn.addEventListener('click', async () => {
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -402,9 +414,11 @@
                 authMessage.textContent = 'Succesvol ingelogd!';
                 authMessage.className = 'mt-6 text-sm auth-message-success'; // Update class
             } catch (error) {
-                authMessage.textContent = `Fout bij inloggen: ${error.message}`;
+                authMessage.textContent = `Fout bij inloggen: ${error.message}. Controleer je e-mail en wachtwoord.`;
                 authMessage.className = 'mt-6 text-sm auth-message-error'; // Update class
                 console.error("Login error:", error);
+                // BELANGRIJK: Controleer in de Firebase Console of "Email/Password" authenticatie is ingeschakeld.
+                // Ga naar Authentication -> Sign-in methoden.
             }
         });
 
@@ -421,9 +435,11 @@
                 authMessage.textContent = 'Registratie succesvol! Je bent nu ingelogd.';
                 authMessage.className = 'mt-6 text-sm auth-message-success'; // Update class
             } catch (error) {
-                authMessage.textContent = `Fout bij registreren: ${error.message}`;
+                authMessage.textContent = `Fout bij registreren: ${error.message}. Wachtwoord moet minimaal 6 tekens zijn.`;
                 authMessage.className = 'mt-6 text-sm auth-message-error'; // Update class
                 console.error("Registration error:", error);
+                // BELANGRIJK: Controleer in de Firebase Console of "Email/Password" authenticatie is ingeschakeld.
+                // Ga naar Authentication -> Sign-in methoden.
             }
         });
 
