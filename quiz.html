@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-to-br from-green-400 via-teal-500 to-blue-500 min-h-screen flex flex-col items-center justify-center p-4 font-inter text-gray-800">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl text-center">
+        <h1 class="text-5xl font-extrabold text-teal-700 mb-6 drop-shadow-lg">Quiz Tijd! 🧠</h1>
+        <p class="text-lg text-gray-600 mb-8">Test je kennis van de woorden!</p>
+
+        <div id="quizSection">
+            <div class="mb-6 p-6 bg-green-50 rounded-lg shadow-inner">
+                <h2 class="text-3xl font-bold text-green-700 mb-4" id="quizWord"></h2>
+                <input type="text" id="answerInput" placeholder="Jouw antwoord..." class="w-full p-3 rounded-lg border-2 border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200 text-lg mb-4">
+                <div class="flex justify-center gap-4 mb-4">
+                    <label class="inline-flex items-center text-gray-700">
+                        <input type="radio" name="correction" value="strict" checked class="form-radio h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-lg">Strenge correctie</span>
+                    </label>
+                    <label class="inline-flex items-center text-gray-700">
+                        <input type="radio" name="correction" value="loose" class="form-radio h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-lg">Minder strenge correctie</span>
+                    </label>
+                </div>
+                <button id="checkAnswerButton" class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-md">
+                    Controleer Antwoord
+                </button>
+                <div id="feedback" class="feedback-message mt-4 hidden"></div>
+            </div>
+
+            <div class="mb-8 p-6 bg-yellow-50 rounded-lg shadow-inner">
+                <h2 class="text-3xl font-bold text-yellow-700 mb-4">Score</h2>
+                <p class="text-2xl font-bold text-gray-800">Correct: <span id="correctCount" class="text-green-600">0</span> / Totaal: <span id="totalCount" class="text-blue-600">0</span></p>
+            </div>
+        </div>
+
+        <div id="noWordsMessage" class="text-red-600 text-xl font-semibold mb-6 hidden">
+            Voeg eerst woorden toe op de <a href="index.html" class="text-blue-600 hover:underline">hoofdpagina</a> om de quiz te starten!
+        </div>
+
+        <a href="index.html" class="bg-gray-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-600 transition duration-300 transform hover:scale-105 shadow-md">
+            Terug naar Hoofdpagina
+        </a>
+    </div>
+
+    <script src="quiz.js"></script>
+</body>
+</html>
