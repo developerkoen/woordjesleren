@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woordjesleren App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Woordjesleren App</h1>
+        <button id="loginBtn">Inloggen</button>
+        <button id="logoutBtn" style="display:none;">Uitloggen</button>
+        <div id="wordListContainer" style="display:none;">
+            <h2>Je Woordenlijsten</h2>
+            <input type="text" id="newWord" placeholder="Voeg een nieuw woord toe">
+            <button id="addWordBtn">Voeg Woord Toe</button>
+            <ul id="wordList"></ul>
+        </div>
+        <button id="toggleDarkMode">Schakel Donkere Modus</button>
+    </div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
