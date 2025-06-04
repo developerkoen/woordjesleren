@@ -1,0 +1,37 @@
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #fff;
+  color: #111;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode {
+  background-color: #121212;
+  color: #f1f1f1;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1em;
+  background-color: #6200ea;
+  color: white;
+}
+
+header button {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: white;
+  cursor: pointer;
+}
+
+nav a {
+  margin: 0 1em;
+  text-decoration: none;
+  color: #6200ea;
+}
+
+body.dark-mode nav a {
+  color: #bb86fc;
+}
