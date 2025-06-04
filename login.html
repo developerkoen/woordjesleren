@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - WoordjesLeren</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="auth.js" defer></script>
+  <script src="darkmode.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Inloggen</h1>
+    <button id="toggleDark">🌙</button>
+  </header>
+  <main>
+    <form id="loginForm">
+      <input type="email" placeholder="Email" id="email" required />
+      <input type="password" placeholder="Wachtwoord" id="password" required />
+      <button type="submit">Inloggen</button>
+      <p id="error"></p>
+    </form>
+    <p>Nog geen account? <a href="#" id="signup">Klik hier om te registreren</a></p>
+  </main>
+  <script type="module">
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB59BVbioUciigC0l47T1tQAsF_kPs2Frs",
+      authDomain: "leer-app.firebaseapp.com",
+      projectId: "leer-app",
+      storageBucket: "leer-app.firebasestorage.app",
+      messagingSenderId: "1029710103221",
+      appId: "1:1029710103221:web:386173aefbed03015574fc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const form = document.getElementById("loginForm");
+    const errorP = document.getElementById("error");
+    const signupLink = document.getElementById("signup");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = form.email.value;
+      const password = form.password.value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = "index.html";
+      } catch (err) {
+        errorP.textContent = "Fout: " + err.message;
+      }
+    });
+
+    signupLink.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const email = prompt("Voer je e-mailadres in:");
+      const password = prompt("Kies een wachtwoord:");
+      if (email && password) {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          alert("Account aangemaakt. Je bent nu ingelogd.");
+          window.location.href = "index.html";
+        } catch (err) {
+          errorP.textContent = "Fout: " + err.message;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
