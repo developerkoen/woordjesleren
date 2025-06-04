@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inloggen - Franse Woordenschat App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .full-page-content {
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, color 0.3s;
+            text-align: center;
+        }
+        .themed-input {
+            border-color: #d1d5db; /* gray-300 */
+            background-color: #ffffff;
+            color: #1f2937; /* gray-800 */
+        }
+        .themed-input:focus {
+            ring-color: #3b82f6; /* blue-500 */
+            border-color: #3b82f6; /* blue-500 */
+        }
+        /* Dark mode overrides for specific elements */
+        body.dark-mode {
+            background-color: #1f2937; /* gray-900 */
+            color: #f3f4f6; /* gray-100 */
+        }
+        .full-page-content.dark-mode {
+            background-color: #374151; /* gray-700 */
+            color: #e5e7eb; /* gray-200 */
+            border-color: #4b5563; /* gray-600 */
+        }
+        .themed-input.dark-mode {
+            border-color: #6b7280; /* gray-500 */
+            background-color: #111827; /* gray-900 */
+            color: #f3f4f6; /* gray-100 */
+        }
+        .themed-input.dark-mode:focus {
+            ring-color: #60a5fa; /* blue-400 */
+            border-color: #60a5fa; /* blue-400 */
+        }
+        #messageDisplay {
+            animation: fade-in-down 0.5s ease-out forwards;
+        }
+        @keyframes fade-in-down {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800">
+
+    <h1 class="text-4xl font-bold text-blue-800 mb-6 drop-shadow-md">Franse Woordenschat</h1>
+
+    <!-- Message Display -->
+    <div id="messageDisplay" class="hidden bg-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 shadow-md"></div>
+
+    <!-- Login/Register Form -->
+    <div id="loginRegisterForm" class="full-page-content border border-gray-200">
+        <h2 class="text-2xl font-semibold mb-4">Inloggen / Registreren</h2>
+
+        <div class="mb-4">
+            <label for="loginEmailInput" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">E-mail:</label>
+            <input type="email" id="loginEmailInput" placeholder="jouw@email.com" class="w-full p-3 rounded-lg themed-input">
+        </div>
+
+        <div class="mb-6">
+            <label for="loginPasswordInput" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Wachtwoord:</label>
+            <input type="password" id="loginPasswordInput" placeholder="Wachtwoord" class="w-full p-3 rounded-lg themed-input">
+        </div>
+
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <button id="loginBtn" class="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md">
+                Inloggen
+            </button>
+            <button id="registerBtn" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md">
+                Registreren
+            </button>
+        </div>
+        <p id="loginMessage" class="text-sm text-red-500 mt-4"></p>
+    </div>
+
+    <!-- Firebase SDK and Login/Register Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+        // --- Global Variables ---
+        let app;
+        let auth;
+        let db;
+        let messageTimeout = null;
+        let isDarkMode = false; // State for dark mode
+
+        // --- DOM Elements ---
+        const messageDisplay = document.getElementById('messageDisplay');
+        const loginEmailInput = document.getElementById('loginEmailInput');
+        const loginPasswordInput = document.getElementById('loginPasswordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const loginMessage = document.getElementById('loginMessage');
+        const body = document.body;
+        const loginRegisterForm = document.getElementById('loginRegisterForm');
+
+        // --- Helper Functions ---
+        function showMessage(msg, isError = true) {
+            messageDisplay.textContent = msg;
+            messageDisplay.classList.remove('hidden', 'bg-yellow-200', 'bg-green-200', 'text-yellow-800', 'text-green-800', 'text-red-500');
+            if (isError) {
+                messageDisplay.classList.add('bg-red-200', 'text-red-800');
+            } else {
+                messageDisplay.classList.add('bg-green-200', 'text-green-800');
+            }
+            messageDisplay.classList.add('animate-fade-in-down');
+
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+            }
+            messageTimeout = setTimeout(() => {
+                messageDisplay.classList.add('hidden');
+                messageDisplay.classList.remove('animate-fade-in-down');
+            }, 3000);
+        }
+
+        function applyTheme() {
+            // Check if dark mode is active from localStorage (set by profile page)
+            isDarkMode = localStorage.getItem('isDarkMode') === 'true';
+
+            if (isDarkMode) {
+                body.classList.add('dark-mode');
+                body.classList.remove('bg-gradient-to-br', 'from-blue-100', 'to-purple-100', 'text-gray-800');
+                body.classList.add('bg-gray-900', 'text-gray-100');
+
+                loginRegisterForm.classList.add('dark-mode');
+                loginRegisterForm.classList.remove('bg-white', 'border-gray-200');
+
+                document.querySelectorAll('.themed-input').forEach(input => {
+                    input.classList.add('dark-mode');
+                    input.classList.remove('light-mode');
+                });
+            } else {
+                body.classList.remove('dark-mode');
+                body.classList.add('bg-gradient-to-br', 'from-blue-100', 'to-purple-100', 'text-gray-800');
+                body.classList.remove('bg-gray-900', 'text-gray-100');
+
+                loginRegisterForm.classList.remove('dark-mode');
+                loginRegisterForm.classList.add('bg-white', 'border-gray-200');
+
+                document.querySelectorAll('.themed-input').forEach(input => {
+                    input.classList.remove('dark-mode');
+                    input.classList.add('light-mode');
+                });
+            }
+        }
+
+        // --- Firebase Initialization ---
+        async function initializeFirebase() {
+            try {
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
+                    "apiKey": "AIzaSyB59BVbioUciigC0l47T1tQAsF_kPs2Frs",
+                    "authDomain": "leer-app.firebaseapp.com",
+                    "projectId": "leer-app",
+                    "storageBucket": "leer-app.firebasestorage.app",
+                    "messagingSenderId": "1029710103221",
+                    "appId": "1:1029710103221:web:386173aefbed03015574fc"
+                }`);
+
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // User is logged in, redirect to home.html
+                        window.location.href = 'home.html';
+                    } else {
+                        // Not logged in, stay on this page
+                        applyTheme(); // Apply theme if not logged in
+                    }
+                });
+            } catch (error) {
+                showMessage(`Fout bij initialiseren Firebase: ${error.message}`);
+                console.error("Error initializing Firebase:", error);
+            }
+        }
+
+        // --- Authentication Functions ---
+        async function handleLogin() {
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            loginMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                loginMessage.textContent = "Vul zowel e-mail als wachtwoord in.";
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged will handle redirect
+            } catch (error) {
+                let errorMessage = "Inloggen mislukt.";
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage = "Onjuiste e-mail of wachtwoord.";
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = "Ongeldig e-mailadres.";
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = "Te veel mislukte inlogpogingen. Probeer later opnieuw.";
+                }
+                loginMessage.textContent = errorMessage;
+                console.error("Login error:", error);
+            }
+        }
+
+        async function handleRegister() {
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            loginMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                loginMessage.textContent = "Vul zowel e-mail als wachtwoord in.";
+                return;
+            }
+            if (password.length < 6) {
+                loginMessage.textContent = "Wachtwoord moet minimaal 6 tekens lang zijn.";
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                // After successful registration, save default profile settings
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const userProfileDocRef = doc(db, `artifacts/${appId}/users/${userCredential.user.uid}/userProfile`, 'settings');
+                await setDoc(userProfileDocRef, {
+                    name: 'Nieuwe Gebruiker',
+                    isDarkMode: false
+                });
+                showMessage("Account succesvol aangemaakt! Je wordt doorgestuurd...", false);
+                // onAuthStateChanged will handle redirect
+            } catch (error) {
+                let errorMessage = "Registratie mislukt.";
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = "Dit e-mailadres is al in gebruik.";
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = "Wachtwoord is te zwak.";
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = "Ongeldig e-mailadres.";
+                }
+                loginMessage.textContent = errorMessage;
+                console.error("Registration error:", error);
+            }
+        }
+
+        // --- Event Listeners ---
+        loginBtn.addEventListener('click', handleLogin);
+        registerBtn.addEventListener('click', handleRegister);
+
+        // --- Initial Call ---
+        window.onload = initializeFirebase;
+    </script>
+</body>
+</html>
