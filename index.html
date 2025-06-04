@@ -3,22 +3,677 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Woordjesleren App</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>WoordMeister - Leer Woordjes Leuk!</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS voor een jeugdige en aantrekkelijke look */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            @apply bg-gray-100 text-gray-800; /* Standaard lichte modus */
+        }
+
+        body.dark-mode {
+            @apply bg-gray-900 text-gray-100; /* Donkere modus */
+        }
+
+        .container {
+            @apply max-w-4xl mx-auto p-4;
+        }
+
+        .card {
+            @apply bg-white rounded-xl shadow-lg p-6;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dark-mode .card {
+            @apply bg-gray-800 shadow-2xl;
+        }
+
+        .btn-primary {
+            @apply bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-purple-700 transition duration-200 ease-in-out transform hover:scale-105;
+        }
+
+        .btn-secondary {
+            @apply bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-200 ease-in-out transform hover:scale-105;
+        }
+
+        .btn-danger {
+            @apply bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-200 ease-in-out transform hover:scale-105;
+        }
+
+        .btn-outline {
+            @apply bg-transparent border border-purple-600 text-purple-600 font-semibold py-2 px-4 rounded-lg hover:bg-purple-100 transition duration-200 ease-in-out;
+        }
+
+        .dark-mode .btn-outline {
+            @apply border-purple-400 text-purple-400 hover:bg-gray-700;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            @apply w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500;
+        }
+
+        .dark-mode input[type="email"],
+        .dark-mode input[type="password"],
+        .dark-mode input[type="text"] {
+            @apply bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400;
+        }
+
+        /* Flashcard specifieke stijlen */
+        .flashcard-container {
+            perspective: 1000px;
+            @apply flex justify-center items-center h-64 my-8;
+        }
+
+        .flashcard {
+            @apply w-72 h-48 relative rounded-xl shadow-xl cursor-pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            @apply absolute w-full h-full flex justify-center items-center text-3xl font-bold rounded-xl backface-hidden;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+        }
+
+        .flashcard-front {
+            @apply bg-gradient-to-br from-purple-400 to-blue-400 text-white;
+        }
+
+        .flashcard-back {
+            @apply bg-gradient-to-br from-green-400 to-teal-400 text-white;
+            transform: rotateY(180deg);
+        }
+
+        .dark-mode .flashcard-front {
+            @apply from-purple-700 to-blue-700;
+        }
+
+        .dark-mode .flashcard-back {
+            @apply from-green-700 to-teal-700;
+        }
+
+        /* Modale dialoog voor bevestigingen */
+        .modal-overlay {
+            @apply fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50;
+        }
+
+        .modal-content {
+            @apply bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full text-center;
+        }
+
+        /* Verbeterde login pagina specifieke stijlen */
+        #auth-section {
+            @apply relative overflow-hidden;
+        }
+
+        #auth-section::before {
+            content: '';
+            @apply absolute inset-0 bg-gradient-to-br from-purple-200 to-blue-200 opacity-30 dark:from-purple-900 dark:to-blue-900 dark:opacity-50;
+            z-index: 0;
+            border-radius: 0.75rem; /* rounded-xl */
+        }
+
+        #auth-section > * {
+            position: relative; /* Zorg ervoor dat inhoud boven de pseudo-elementen blijft */
+            z-index: 1;
+        }
+
+        .auth-message-success {
+            @apply text-green-600 dark:text-green-400 font-semibold;
+        }
+
+        .auth-message-error {
+            @apply text-red-600 dark:text-red-400 font-semibold;
+        }
+    </style>
 </head>
-<body>
-    <div id="app">
-        <h1>Woordjesleren App</h1>
-        <button id="loginBtn">Inloggen</button>
-        <button id="logoutBtn" style="display:none;">Uitloggen</button>
-        <div id="wordListContainer" style="display:none;">
-            <h2>Je Woordenlijsten</h2>
-            <input type="text" id="newWord" placeholder="Voeg een nieuw woord toe">
-            <button id="addWordBtn">Voeg Woord Toe</button>
-            <ul id="wordList"></ul>
+<body class="dark-mode"> <!-- Standaard starten in donkere modus, kan worden gewijzigd door localStorage -->
+    <header class="bg-gradient-to-r from-purple-700 to-indigo-700 text-white p-4 shadow-md flex justify-between items-center rounded-b-xl">
+        <h1 class="text-3xl font-bold">WoordMeister ✨</h1>
+        <div class="flex items-center space-x-4">
+            <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition duration-200">
+                <span class="text-2xl">🌓</span>
+            </button>
+            <button id="logout-btn" class="btn-outline hidden">Uitloggen</button>
         </div>
-        <button id="toggleDarkMode">Schakel Donkere Modus</button>
+    </header>
+
+    <main class="container py-8">
+        <!-- Authenticatie sectie -->
+        <section id="auth-section" class="card text-center">
+            <h2 class="text-4xl font-extrabold mb-6 text-purple-700 dark:text-purple-300">
+                <span class="mr-2">🚀</span> Welkom bij WoordMeister!
+            </h2>
+            <p class="mb-6 text-lg text-gray-600 dark:text-gray-300">
+                Log in of registreer om je woordjes te leren en je eigen lijsten te maken!
+            </p>
+            <input type="email" id="email" placeholder="E-mailadres">
+            <input type="password" id="password" placeholder="Wachtwoord">
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="login-btn" class="btn-primary">Inloggen</button>
+                <button id="register-btn" class="btn-secondary">Registreren</button>
+            </div>
+            <p id="auth-message" class="mt-6 text-sm"></p>
+        </section>
+
+        <!-- Hoofdapp sectie (verborgen tot inloggen) -->
+        <section id="app-section" class="hidden">
+            <nav class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
+                <button id="nav-my-lists" class="btn-primary">Mijn Woordenlijsten</button>
+                <button id="nav-create-list" class="btn-secondary">Nieuwe Lijst Maken</button>
+            </nav>
+
+            <!-- Mijn Woordenlijsten sectie -->
+            <div id="my-lists-view" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-purple-600 dark:text-purple-400">Jouw Woordenlijsten</h2>
+                <p id="user-id-display" class="text-sm text-gray-500 dark:text-gray-400 mb-4"></p>
+                <div id="word-lists-display" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Woordenlijsten worden hier dynamisch geladen -->
+                    <p id="no-lists-message" class="col-span-full text-center text-gray-500 dark:text-gray-400 hidden">
+                        Je hebt nog geen woordenlijsten. Maak er een aan!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Nieuwe Lijst Maken sectie -->
+            <div id="create-list-view" class="card hidden">
+                <h2 id="create-edit-title" class="text-2xl font-bold mb-4 text-purple-600 dark:text-purple-400">Nieuwe Woordenlijst Maken</h2>
+                <input type="text" id="list-name" placeholder="Naam van de lijst (bijv. Spaanse Werkwoorden)" class="mb-4">
+
+                <div id="word-pairs-container">
+                    <!-- Woordparen worden hier dynamisch toegevoegd -->
+                    <div class="flex flex-col md:flex-row gap-2 mb-2">
+                        <input type="text" class="word-foreign flex-1" placeholder="Vreemd woord">
+                        <input type="text" class="word-native flex-1" placeholder="Vertaling">
+                        <button class="remove-word-pair btn-danger w-full md:w-auto">X</button>
+                    </div>
+                </div>
+                <button id="add-word-pair-btn" class="btn-outline w-full mb-4">+ Woordpaar Toevoegen</button>
+                <button id="save-list-btn" class="btn-primary w-full">Lijst Opslaan</button>
+            </div>
+
+            <!-- Leren sectie -->
+            <div id="learn-view" class="card hidden text-center">
+                <h2 class="text-2xl font-bold mb-4 text-purple-600 dark:text-purple-400">Leren: <span id="current-learning-list-name"></span></h2>
+                <p id="learning-progress" class="text-gray-600 dark:text-gray-300 mb-4"></p>
+
+                <div class="flashcard-container">
+                    <div id="flashcard" class="flashcard">
+                        <div id="flashcard-front" class="flashcard-face flashcard-front"></div>
+                        <div id="flashcard-back" class="flashcard-face flashcard-back"></div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center space-x-4 mt-6">
+                    <button id="prev-word-btn" class="btn-secondary">Vorige</button>
+                    <button id="next-word-btn" class="btn-primary">Volgende</button>
+                </div>
+                <button id="back-to-lists-btn" class="btn-outline mt-6">Terug naar Lijsten</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-4 text-gray-600 dark:text-gray-400">
+        <p>&copy; 2025 WoordMeister. Alle rechten voorbehouden.</p>
+    </footer>
+
+    <!-- Modale dialoog voor bevestigingen -->
+    <div id="confirmation-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+            <p id="modal-message" class="mb-6"></p>
+            <div class="flex justify-center space-x-4">
+                <button id="modal-confirm-btn" class="btn-danger">Bevestigen</button>
+                <button id="modal-cancel-btn" class="btn-secondary">Annuleren</button>
+            </div>
+        </div>
     </div>
-    <script type="module" src="app.js"></script>
+
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+        // Firebase configuratie en initialisatie
+        // Deze variabelen worden geleverd door de Canvas omgeving
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, auth, db;
+        let currentUserId = null;
+        let wordLists = []; // Cache voor woordenlijsten van de gebruiker
+        let currentLearningList = null;
+        let currentWordIndex = 0;
+
+        // UI Elementen
+        const authSection = document.getElementById('auth-section');
+        const appSection = document.getElementById('app-section');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const authMessage = document.getElementById('auth-message');
+        const logoutBtn = document.getElementById('logout-btn');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const userIdDisplay = document.getElementById('user-id-display');
+
+        const navMyListsBtn = document.getElementById('nav-my-lists');
+        const navCreateListBtn = document.getElementById('nav-create-list');
+
+        const myListsView = document.getElementById('my-lists-view');
+        const createListView = document.getElementById('create-list-view');
+        const learnView = document.getElementById('learn-view');
+
+        const listNameInput = document.getElementById('list-name');
+        const wordPairsContainer = document.getElementById('word-pairs-container');
+        const addWordPairBtn = document.getElementById('add-word-pair-btn');
+        const saveListBtn = document.getElementById('save-list-btn');
+        const createEditTitle = document.getElementById('create-edit-title');
+        let editingListId = null; // Houdt bij welke lijst wordt bewerkt
+
+        const wordListsDisplay = document.getElementById('word-lists-display');
+        const noListsMessage = document.getElementById('no-lists-message');
+
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const prevWordBtn = document.getElementById('prev-word-btn');
+        const nextWordBtn = document.getElementById('next-word-btn');
+        const currentLearningListName = document.getElementById('current-learning-list-name');
+        const learningProgress = document.getElementById('learning-progress');
+        const backToListsBtn = document.getElementById('back-to-lists-btn');
+
+        // Modale dialoog elementen
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        let modalConfirmAction = null; // Functie die wordt uitgevoerd bij bevestiging
+
+        // Functie om de modale dialoog te tonen
+        function showModal(title, message, onConfirm) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalConfirmAction = onConfirm;
+            confirmationModal.classList.remove('hidden');
+        }
+
+        // Functie om de modale dialoog te verbergen
+        function hideModal() {
+            confirmationModal.classList.add('hidden');
+            modalConfirmAction = null;
+        }
+
+        // Event listeners voor de modale dialoog
+        modalConfirmBtn.addEventListener('click', () => {
+            if (modalConfirmAction) {
+                modalConfirmAction();
+            }
+            hideModal();
+        });
+
+        modalCancelBtn.addEventListener('click', () => {
+            hideModal();
+        });
+
+
+        // Initialiseer Firebase en authenticatie
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Meld aan met aangepaste token of anoniem
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Luister naar authenticatie statusveranderingen
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUserId = user.uid;
+                        console.log("Gebruiker ingelogd:", user.email || "Anoniem", "UID:", user.uid);
+                        authSection.classList.add('hidden');
+                        appSection.classList.remove('hidden');
+                        logoutBtn.classList.remove('hidden');
+                        userIdDisplay.textContent = `Jouw ID: ${currentUserId}`;
+                        // Start met het laden van woordenlijsten zodra de gebruiker is ingelogd
+                        setupWordListListener();
+                        showSection('my-lists-view'); // Toon standaard de lijstweergave
+                    } else {
+                        currentUserId = null;
+                        console.log("Geen gebruiker ingelogd.");
+                        authSection.classList.remove('hidden');
+                        appSection.classList.add('hidden');
+                        logoutBtn.classList.add('hidden');
+                        userIdDisplay.textContent = '';
+                        wordLists = []; // Reset lijsten bij uitloggen
+                        renderWordLists(); // Leeg de weergave
+                    }
+                });
+            } catch (error) {
+                console.error("Fout bij initialiseren Firebase:", error);
+                authMessage.textContent = `Fout: ${error.message}`;
+                authMessage.style.color = 'red';
+            }
+        }
+
+        // Functie om secties te tonen/verbergen
+        function showSection(sectionId) {
+            const sections = [myListsView, createListView, learnView];
+            sections.forEach(section => {
+                if (section.id === sectionId) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+
+            // Reset create/edit form wanneer we van sectie wisselen
+            if (sectionId !== 'create-list-view') {
+                resetCreateEditForm();
+            }
+        }
+
+        // --- Authenticatie Functies ---
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                authMessage.textContent = 'Succesvol ingelogd!';
+                authMessage.className = 'mt-6 text-sm auth-message-success'; // Update class
+            } catch (error) {
+                authMessage.textContent = `Fout bij inloggen: ${error.message}`;
+                authMessage.className = 'mt-6 text-sm auth-message-error'; // Update class
+                console.error("Login error:", error);
+            }
+        });
+
+        registerBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                // Maak een gebruikersdocument aan in Firestore
+                await setDoc(doc(db, `artifacts/${appId}/users/${userCredential.user.uid}/profile`, 'user_data'), {
+                    email: userCredential.user.email,
+                    createdAt: new Date()
+                });
+                authMessage.textContent = 'Registratie succesvol! Je bent nu ingelogd.';
+                authMessage.className = 'mt-6 text-sm auth-message-success'; // Update class
+            } catch (error) {
+                authMessage.textContent = `Fout bij registreren: ${error.message}`;
+                authMessage.className = 'mt-6 text-sm auth-message-error'; // Update class
+                console.error("Registration error:", error);
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                authMessage.textContent = 'Succesvol uitgelogd.';
+                authMessage.className = 'mt-6 text-sm auth-message-success'; // Update class
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        });
+
+        // --- Dark Mode Toggle ---
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        });
+
+        // Pas thema toe bij het laden van de pagina
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        });
+
+        // --- Navigatie Knoppen ---
+        navMyListsBtn.addEventListener('click', () => showSection('my-lists-view'));
+        navCreateListBtn.addEventListener('click', () => {
+            resetCreateEditForm();
+            showSection('create-list-view');
+        });
+
+        // --- Woordenlijst Beheer Functies ---
+
+        // Luisteraar voor realtime updates van woordenlijsten
+        function setupWordListListener() {
+            if (!currentUserId) return;
+
+            const q = collection(db, `artifacts/${appId}/users/${currentUserId}/wordLists`);
+            onSnapshot(q, (snapshot) => {
+                wordLists = [];
+                snapshot.forEach((doc) => {
+                    wordLists.push({ id: doc.id, ...doc.data() });
+                });
+                renderWordLists();
+            }, (error) => {
+                console.error("Fout bij het ophalen van woordenlijsten:", error);
+            });
+        }
+
+        // Voeg een nieuw woordpaar inputveld toe
+        function addWordPairInput(foreign = '', native = '') {
+            const div = document.createElement('div');
+            div.className = 'flex flex-col md:flex-row gap-2 mb-2';
+            div.innerHTML = `
+                <input type="text" class="word-foreign flex-1 p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" placeholder="Vreemd woord" value="${foreign}">
+                <input type="text" class="word-native flex-1 p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" placeholder="Vertaling" value="${native}">
+                <button class="remove-word-pair btn-danger w-full md:w-auto">X</button>
+            `;
+            wordPairsContainer.appendChild(div);
+            div.querySelector('.remove-word-pair').addEventListener('click', () => div.remove());
+        }
+
+        addWordPairBtn.addEventListener('click', () => addWordPairInput());
+
+        // Reset het aanmaak/bewerk formulier
+        function resetCreateEditForm() {
+            listNameInput.value = '';
+            wordPairsContainer.innerHTML = ''; // Leeg alle woordparen
+            addWordPairInput(); // Voeg één leeg woordpaar toe
+            createEditTitle.textContent = 'Nieuwe Woordenlijst Maken';
+            editingListId = null;
+        }
+
+        // Sla de woordenlijst op (nieuw of bewerken)
+        saveListBtn.addEventListener('click', async () => {
+            const listName = listNameInput.value.trim();
+            if (!listName) {
+                // Gebruik de modale dialoog in plaats van alert
+                showModal("Lijst Naam Ontbreekt", "Geef de lijst een naam!");
+                return;
+            }
+
+            const words = [];
+            wordPairsContainer.querySelectorAll('.flex.flex-col').forEach(pairDiv => {
+                const foreign = pairDiv.querySelector('.word-foreign').value.trim();
+                const native = pairDiv.querySelector('.word-native').value.trim();
+                if (foreign && native) { // Voeg alleen complete paren toe
+                    words.push({ foreign, native });
+                }
+            });
+
+            if (words.length === 0) {
+                // Gebruik de modale dialoog in plaats van alert
+                showModal("Geen Woorden Toegevoegd", "Voeg ten minste één woordpaar toe aan de lijst.");
+                return;
+            }
+
+            try {
+                if (editingListId) {
+                    // Lijst bewerken
+                    const listRef = doc(db, `artifacts/${appId}/users/${currentUserId}/wordLists`, editingListId);
+                    await updateDoc(listRef, { name: listName, words: words });
+                    // Gebruik de modale dialoog in plaats van alert
+                    showModal("Succes!", "Lijst succesvol bijgewerkt!");
+                } else {
+                    // Nieuwe lijst toevoegen
+                    await addDoc(collection(db, `artifacts/${appId}/users/${currentUserId}/wordLists`), {
+                        name: listName,
+                        words: words,
+                        createdAt: new Date()
+                    });
+                    // Gebruik de modale dialoog in plaats van alert
+                    showModal("Succes!", "Lijst succesvol aangemaakt!");
+                }
+                resetCreateEditForm();
+                showSection('my-lists-view'); // Ga terug naar de lijstweergave
+            } catch (e) {
+                console.error("Fout bij opslaan lijst: ", e);
+                // Gebruik de modale dialoog in plaats van alert
+                showModal("Fout!", `Fout bij opslaan lijst: ${e.message}`);
+            }
+        });
+
+        // Render woordenlijsten in de UI
+        function renderWordLists() {
+            wordListsDisplay.innerHTML = ''; // Leeg de huidige weergave
+            if (wordLists.length === 0) {
+                noListsMessage.classList.remove('hidden');
+            } else {
+                noListsMessage.classList.add('hidden');
+                wordLists.forEach(list => {
+                    const listCard = document.createElement('div');
+                    listCard.className = 'card flex flex-col justify-between items-start p-4';
+                    listCard.innerHTML = `
+                        <h3 class="text-xl font-semibold mb-2 text-purple-600 dark:text-purple-400">${list.name}</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">${list.words.length} woord(en)</p>
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            <button data-id="${list.id}" class="learn-list-btn btn-primary text-sm">Leren</button>
+                            <button data-id="${list.id}" class="edit-list-btn btn-secondary text-sm">Bewerken</button>
+                            <button data-id="${list.id}" class="delete-list-btn btn-danger text-sm">Verwijderen</button>
+                        </div>
+                    `;
+                    wordListsDisplay.appendChild(listCard);
+                });
+
+                // Voeg event listeners toe aan de nieuwe knoppen
+                document.querySelectorAll('.learn-list-btn').forEach(button => {
+                    button.addEventListener('click', (e) => startLearning(e.target.dataset.id));
+                });
+                document.querySelectorAll('.edit-list-btn').forEach(button => {
+                    button.addEventListener('click', (e) => editWordList(e.target.dataset.id));
+                });
+                document.querySelectorAll('.delete-list-btn').forEach(button => {
+                    button.addEventListener('click', (e) => confirmDeleteList(e.target.dataset.id));
+                });
+            }
+        }
+
+        // Bewerk een woordenlijst
+        function editWordList(listId) {
+            const listToEdit = wordLists.find(list => list.id === listId);
+            if (listToEdit) {
+                listNameInput.value = listToEdit.name;
+                wordPairsContainer.innerHTML = ''; // Leeg bestaande paren
+                listToEdit.words.forEach(word => addWordPairInput(word.foreign, word.native));
+                createEditTitle.textContent = 'Woordenlijst Bewerken';
+                editingListId = listId;
+                showSection('create-list-view');
+            }
+        }
+
+        // Bevestiging voor verwijderen
+        function confirmDeleteList(listId) {
+            const listToDelete = wordLists.find(list => list.id === listId);
+            if (listToDelete) {
+                showModal(
+                    "Lijst Verwijderen",
+                    `Weet je zeker dat je de lijst "${listToDelete.name}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`,
+                    () => deleteWordList(listId)
+                );
+            }
+        }
+
+        // Verwijder een woordenlijst
+        async function deleteWordList(listId) {
+            try {
+                await deleteDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/wordLists`, listId));
+                // Gebruik de modale dialoog in plaats van alert
+                showModal("Succes!", "Lijst succesvol verwijderd!");
+            } catch (e) {
+                console.error("Fout bij verwijderen lijst: ", e);
+                // Gebruik de modale dialoog in plaats van alert
+                showModal("Fout!", `Fout bij verwijderen lijst: ${e.message}`);
+            }
+        }
+
+        // --- Leren Functies (Flashcards) ---
+        function startLearning(listId) {
+            currentLearningList = wordLists.find(list => list.id === listId);
+            if (!currentLearningList || currentLearningList.words.length === 0) {
+                // Gebruik de modale dialoog in plaats van alert
+                showModal("Lijst Leeg", "Deze lijst is leeg of bestaat niet. Voeg eerst woorden toe.");
+                return;
+            }
+            currentWordIndex = 0;
+            currentLearningListName.textContent = currentLearningList.name;
+            showSection('learn-view');
+            displayCurrentWord();
+        }
+
+        function displayCurrentWord() {
+            if (!currentLearningList || currentLearningList.words.length === 0) {
+                flashcardFront.textContent = "Geen woorden";
+                flashcardBack.textContent = "Voeg woorden toe";
+                learningProgress.textContent = "0/0";
+                return;
+            }
+
+            const word = currentLearningList.words[currentWordIndex];
+            flashcardFront.textContent = word.foreign;
+            flashcardBack.textContent = word.native;
+            flashcard.classList.remove('flipped'); // Zorg dat de voorkant zichtbaar is
+            learningProgress.textContent = `${currentWordIndex + 1}/${currentLearningList.words.length}`;
+        }
+
+        flashcard.addEventListener('click', () => {
+            flashcard.classList.toggle('flipped');
+        });
+
+        nextWordBtn.addEventListener('click', () => {
+            currentWordIndex = (currentWordIndex + 1) % currentLearningList.words.length;
+            displayCurrentWord();
+        });
+
+        prevWordBtn.addEventListener('click', () => {
+            currentWordIndex = (currentWordIndex - 1 + currentLearningList.words.length) % currentLearningList.words.length;
+            displayCurrentWord();
+        });
+
+        backToListsBtn.addEventListener('click', () => {
+            showSection('my-lists-view');
+        });
+
+        // Initialiseer de app bij het laden van de pagina
+        initializeFirebase();
+    </script>
 </body>
 </html>
