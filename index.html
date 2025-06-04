@@ -89,7 +89,7 @@
         <p>Laden...</p>
     </div>
 
-    <!-- Login/Register Form -->
+    <!-- Login/Register Form (Hidden by default) -->
     <div id="loginRegisterForm" class="full-page-content border border-gray-200 hidden">
         <h2 class="text-2xl font-semibold mb-4">Inloggen / Registreren</h2>
 
@@ -118,7 +118,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
         // --- Global Variables ---
         let app;
@@ -136,7 +136,7 @@
         const loginMessage = document.getElementById('loginMessage');
         const body = document.body;
         const loginRegisterForm = document.getElementById('loginRegisterForm');
-        const loadingSpinner = document.getElementById('loadingSpinner'); // New spinner element
+        const loadingSpinner = document.getElementById('loadingSpinner'); // Spinner element
 
         // --- Helper Functions ---
         function showMessage(msg, isError = true) {
@@ -192,9 +192,9 @@
         // --- Firebase Initialization ---
         async function initializeFirebase() {
             try {
-                // Show loading spinner initially
+                // Show loading spinner initially, hide form
                 loadingSpinner.classList.remove('hidden');
-                loginRegisterForm.classList.add('hidden'); // Hide form initially
+                loginRegisterForm.classList.add('hidden');
 
                 const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
                     "apiKey": "AIzaSyB59BVbioUciigC0l47T1tQAsF_kPs2Frs",
@@ -209,38 +209,23 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // This flag helps ensure onAuthStateChanged only acts after initial check
-                let initialAuthCheckComplete = false;
-
                 onAuthStateChanged(auth, (user) => {
-                    if (initialAuthCheckComplete) {
-                        // Only perform redirects after the initial check is done
-                        if (user) {
-                            window.location.href = 'home.html';
-                        } else {
-                            // User logged out or failed login, show form
-                            loadingSpinner.classList.add('hidden');
-                            loginRegisterForm.classList.remove('hidden');
-                            applyTheme();
-                        }
+                    if (user) {
+                        // User is logged in, redirect immediately.
+                        window.location.href = 'home.html';
                     } else {
-                        // First time onAuthStateChanged fires
-                        initialAuthCheckComplete = true;
-                        if (user) {
-                            window.location.href = 'home.html';
-                        } else {
-                            // No user logged in, show the login form
-                            loadingSpinner.classList.add('hidden');
-                            loginRegisterForm.classList.remove('hidden');
-                            applyTheme();
-                        }
+                        // User is NOT logged in. Hide spinner and show form.
+                        loadingSpinner.classList.add('hidden');
+                        loginRegisterForm.classList.remove('hidden');
+                        applyTheme(); // Apply theme once form is visible
                     }
                 });
             } catch (error) {
                 showMessage(`Fout bij initialiseren Firebase: ${error.message}`);
                 console.error("Error initializing Firebase:", error);
-                loadingSpinner.classList.add('hidden'); // Hide spinner on error
-                loginRegisterForm.classList.remove('hidden'); // Show form anyway
+                // On error, still show the form so user can try to log in
+                loadingSpinner.classList.add('hidden');
+                loginRegisterForm.classList.remove('hidden');
                 applyTheme();
             }
         }
