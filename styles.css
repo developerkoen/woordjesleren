@@ -103,6 +103,7 @@ button.dark-mode {
     background-color: #5cb85c;
 }
 
+/* Stijl voor de thema schakelaar */
 .theme-switch {
     display: flex;
     align-items: center;
@@ -110,20 +111,42 @@ button.dark-mode {
     margin-bottom: 15px;
 }
 
-.theme-switch input {
+.theme-switch span {
     margin-right: 10px;
+    color: #333; /* Kleur voor de tekst in lichte modus */
 }
 
-footer {
+.theme-switch input {
+    display: none; /* Verberg de standaard checkbox */
+}
+
+.theme-switch .slider {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 34px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.theme-switch .slider:before {
     position: absolute;
-    bottom: 20px;
-    width: 100%;
-    text-align: center;
-    color: #fff; /* Witte tekst voor de footer */
-    font-size: 14px;
-    transition: color 0.3s;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
 }
 
-body.dark-mode footer {
-    color: #e0e0e0; /* Lichtere kleur voor de footer in donkere modus */
+/* Actieve schakelaar */
+.theme-switch input:checked + .slider {
+    background-color: #5cb85c; /* Groene kleur voor de schakelaar in donkere modus */
+}
+
+.theme-switch input:checked + .slider:before {
+    transform: translateX(14px); /* Verplaats de schakelaar naar rechts */
 }
