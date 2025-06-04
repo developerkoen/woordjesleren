@@ -133,9 +133,9 @@
     <!-- Message Display -->
     <div id="messageDisplay" class="hidden bg-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 shadow-md animate-fade-in-down"></div>
 
-    <!-- User ID Display -->
-    <div id="userIdDisplay" class="text-sm mb-4 p-2 rounded-lg shadow-sm bg-white text-gray-600">
-        Gebruikers-ID: <span id="userIdSpan" class="font-mono text-blue-700">Laden...</span>
+    <!-- User Name Display (replaces User ID) -->
+    <div id="userNameDisplay" class="text-sm mb-4 p-2 rounded-lg shadow-sm bg-white text-gray-600">
+        Welkom, <span id="userNameSpan" class="font-bold text-blue-700">Gast</span>!
     </div>
 
     <!-- Main App Content (hidden until logged in) -->
@@ -197,6 +197,28 @@
                 <input type="text" id="userNameInput" placeholder="Voer je naam in" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
             </div>
 
+            <div class="mb-4">
+                <label for="profileEmailDisplay" class="block text-sm font-medium mb-1">E-mail:</label>
+                <input type="email" id="profileEmailDisplay" class="w-full p-3 rounded-lg border border-gray-300 themed-input bg-gray-100 cursor-not-allowed" disabled>
+                <!-- Optional: Add a button to change email if needed, but it requires re-authentication -->
+                <!-- <button id="changeEmailBtn" class="mt-2 px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600">E-mail Wijzigen</button> -->
+            </div>
+
+            <div class="mb-4">
+                <label for="newPasswordInput" class="block text-sm font-medium mb-1">Nieuw Wachtwoord (min. 6 tekens):</label>
+                <input type="password" id="newPasswordInput" placeholder="Laat leeg om niet te wijzigen" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+            </div>
+
+            <div class="mb-6">
+                <label for="confirmNewPasswordInput" class="block text-sm font-medium mb-1">Bevestig Nieuw Wachtwoord:</label>
+                <input type="password" id="confirmNewPasswordInput" placeholder="Herhaal nieuw wachtwoord" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+            </div>
+            <button id="updatePasswordBtn" class="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md mb-4">
+                Wachtwoord Wijzigen
+            </button>
+            <p id="profileMessage" class="text-sm text-red-500 mt-2"></p>
+
+
             <div class="flex items-center justify-between mb-4">
                 <span class="text-sm font-medium">Donkere Modus:</span>
                 <label class="relative inline-flex items-center cursor-pointer">
@@ -224,7 +246,8 @@
             onAuthStateChanged,
             signInWithEmailAndPassword,
             createUserWithEmailAndPassword,
-            signOut
+            signOut,
+            updatePassword // Added for password change
         } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
@@ -249,11 +272,12 @@
 
         // --- DOM Elements ---
         const messageDisplay = document.getElementById('messageDisplay');
-        const userIdSpan = document.getElementById('userIdSpan');
+        const userNameDisplay = document.getElementById('userNameDisplay'); // New: User Name Display container
+        const userNameSpan = document.getElementById('userNameSpan'); // Span for user name
         const darkModeToggle = document.getElementById('darkModeToggle');
         const profileBtn = document.getElementById('profileBtn');
         const body = document.body;
-        const mainAppContent = document.getElementById('mainAppContent'); // New: main app container
+        const mainAppContent = document.getElementById('mainAppContent'); // Main app container
         const contentArea = document.getElementById('contentArea');
         const viewSetsBtn = document.getElementById('viewSetsBtn');
         const createSetBtn = document.getElementById('createSetBtn');
@@ -273,9 +297,14 @@
         const profilePopupContent = document.getElementById('profilePopupContent');
         const profileCloseBtn = document.getElementById('profileCloseBtn');
         const userNameInput = document.getElementById('userNameInput');
+        const profileEmailDisplay = document.getElementById('profileEmailDisplay'); // New: Email display
+        const newPasswordInput = document.getElementById('newPasswordInput'); // New: New password input
+        const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput'); // New: Confirm password input
+        const updatePasswordBtn = document.getElementById('updatePasswordBtn'); // New: Update password button
+        const profileMessage = document.getElementById('profileMessage'); // New: Message for profile popup
         const profileDarkModeToggle = document.getElementById('profileDarkModeToggle');
         const profileUserIdSpan = document.getElementById('profileUserIdSpan');
-        const logoutBtn = document.getElementById('logoutBtn'); // New logout button
+        const logoutBtn = document.getElementById('logoutBtn');
 
         let messageTimeout = null; // Timeout for message display
 
@@ -376,15 +405,18 @@
                 }
             });
 
-            // Update user ID display panel
-            const userIdPanel = document.getElementById('userIdDisplay');
-            if (isDarkMode) {
-                userIdPanel.classList.remove('bg-white', 'text-gray-600');
-                userIdPanel.classList.add('bg-gray-600', 'text-gray-200');
-            } else {
-                userIdPanel.classList.remove('bg-gray-600', 'text-gray-200');
-                userIdPanel.classList.add('bg-white', 'text-gray-600');
+            // Update user name display panel
+            const userNameDisplayPanel = document.getElementById('userNameDisplay');
+            if (userNameDisplayPanel) { // Check if element exists
+                if (isDarkMode) {
+                    userNameDisplayPanel.classList.remove('bg-white', 'text-gray-600');
+                    userNameDisplayPanel.classList.add('bg-gray-600', 'text-gray-200');
+                } else {
+                    userNameDisplayPanel.classList.remove('bg-gray-600', 'text-gray-200');
+                    userNameDisplayPanel.classList.add('bg-white', 'text-gray-600');
+                }
             }
+
 
             // Update card front/back colors dynamically
             const cardFronts = document.querySelectorAll('.card-front');
@@ -447,8 +479,9 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
-                        userIdSpan.textContent = currentUserId;
+                        userNameSpan.textContent = userName; // Display current user name on main screen
                         profileUserIdSpan.textContent = currentUserId; // Update user ID in profile popup
+                        profileEmailDisplay.value = user.email || ''; // Display user email in profile popup
                         isAuthReady = true;
                         await loadUserProfile(); // Load user profile (name, dark mode preference)
                         setupSetsListener(); // Start listening for sets once authenticated
@@ -459,8 +492,9 @@
                         // User is signed out or not authenticated
                         currentUserId = null;
                         isAuthReady = false;
-                        userIdSpan.textContent = 'Niet ingelogd';
+                        userNameSpan.textContent = 'Gast'; // Reset user name display
                         profileUserIdSpan.textContent = 'Niet ingelogd';
+                        profileEmailDisplay.value = '';
                         mainAppContent.classList.add('hidden'); // Hide main app content
                         loginPopupOverlay.classList.remove('hidden'); // Show login popup
                         showMessage("Log in om de app te gebruiken.");
@@ -492,6 +526,7 @@
                     isDarkMode = data.isDarkMode || false;
                     // Update UI elements based on loaded profile
                     userNameInput.value = userName;
+                    userNameSpan.textContent = userName; // Update main display
                     profileDarkModeToggle.checked = isDarkMode;
                     applyTheme(); // Apply theme based on loaded preference
                 } else {
@@ -1156,6 +1191,10 @@
             profilePopupOverlay.classList.remove('hidden');
             userNameInput.value = userName; // Set input value to current userName
             profileDarkModeToggle.checked = isDarkMode; // Set toggle state
+            profileEmailDisplay.value = auth.currentUser ? auth.currentUser.email : ''; // Display current email
+            profileMessage.textContent = ''; // Clear previous messages
+            newPasswordInput.value = ''; // Clear password fields
+            confirmNewPasswordInput.value = '';
             applyTheme(); // Ensure popup is themed correctly on open
         }
 
@@ -1163,6 +1202,52 @@
             profilePopupOverlay.classList.add('hidden');
             // Save profile when closing, in case changes were made
             saveUserProfile();
+        }
+
+        /**
+         * Handles updating the user's password.
+         * NOTE: In a real application, you should re-authenticate the user
+         * before sensitive operations like password change for security.
+         * This example omits re-authentication for simplicity.
+         */
+        async function handleUpdatePassword() {
+            const newPassword = newPasswordInput.value.trim();
+            const confirmPassword = confirmNewPasswordInput.value.trim();
+            profileMessage.textContent = ''; // Clear previous messages
+
+            if (!newPassword && !confirmPassword) {
+                profileMessage.textContent = "Voer een nieuw wachtwoord in.";
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                profileMessage.textContent = "Wachtwoorden komen niet overeen.";
+                return;
+            }
+            if (newPassword.length < 6) {
+                profileMessage.textContent = "Wachtwoord moet minimaal 6 tekens lang zijn.";
+                return;
+            }
+
+            try {
+                await updatePassword(auth.currentUser, newPassword);
+                profileMessage.textContent = "Wachtwoord succesvol gewijzigd!";
+                profileMessage.classList.remove('text-red-500');
+                profileMessage.classList.add('text-green-500');
+                newPasswordInput.value = ''; // Clear fields
+                confirmNewPasswordInput.value = '';
+                showMessage("Wachtwoord succesvol gewijzigd!");
+            } catch (error) {
+                let errorMessage = "Fout bij wijzigen wachtwoord.";
+                if (error.code === 'auth/weak-password') {
+                    errorMessage = "Het nieuwe wachtwoord is te zwak.";
+                } else if (error.code === 'auth/requires-recent-login') {
+                    errorMessage = "Voor deze actie moet je opnieuw inloggen. Log uit en weer in.";
+                }
+                profileMessage.textContent = errorMessage;
+                profileMessage.classList.remove('text-green-500');
+                profileMessage.classList.add('text-red-500');
+                console.error("Password update error:", error);
+            }
         }
 
         /**
@@ -1214,9 +1299,11 @@
             }
         };
         logoutBtn.onclick = handleLogout; // Attach logout function to button
+        updatePasswordBtn.onclick = handleUpdatePassword; // Attach password update function
 
         userNameInput.onchange = () => { // Save name when input changes
             userName = userNameInput.value;
+            userNameSpan.textContent = userName; // Update main display immediately
             saveUserProfile();
         };
 
