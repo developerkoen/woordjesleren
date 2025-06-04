@@ -118,7 +118,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
         // --- Global Variables ---
         let app;
@@ -209,15 +209,31 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // This flag helps ensure onAuthStateChanged only acts after initial check
+                let initialAuthCheckComplete = false;
+
                 onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        // User is logged in, redirect immediately.
-                        window.location.href = 'home.html';
+                    if (initialAuthCheckComplete) {
+                        // Only perform redirects after the initial check is done
+                        if (user) {
+                            window.location.href = 'home.html';
+                        } else {
+                            // User logged out or failed login, show form
+                            loadingSpinner.classList.add('hidden');
+                            loginRegisterForm.classList.remove('hidden');
+                            applyTheme();
+                        }
                     } else {
-                        // User is NOT logged in. Hide spinner and show form.
-                        loadingSpinner.classList.add('hidden');
-                        loginRegisterForm.classList.remove('hidden');
-                        applyTheme(); // Apply theme once form is visible
+                        // First time onAuthStateChanged fires
+                        initialAuthCheckComplete = true;
+                        if (user) {
+                            window.location.href = 'home.html';
+                        } else {
+                            // No user logged in, show the login form
+                            loadingSpinner.classList.add('hidden');
+                            loginRegisterForm.classList.remove('hidden');
+                            applyTheme();
+                        }
                     }
                 });
             } catch (error) {
