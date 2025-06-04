@@ -3,236 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Woordenleren met Codeblocks</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Custom CSS voor een jeugdige en aantrekkelijke look */
-        body {
-            font-family: 'Inter', sans-serif;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            @apply bg-gray-100 text-gray-800; /* Standaard lichte modus */
-            min-height: 100vh; /* Zorg dat de body de hele viewport vult */
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Centreer inhoud verticaal */
-            align-items: center; /* Centreer inhoud horizontaal */
-        }
-
-        body.dark-mode {
-            @apply bg-gray-900 text-gray-100; /* Donkere modus */
-        }
-
-        .container {
-            @apply max-w-4xl mx-auto p-4;
-        }
-
-        .card {
-            @apply bg-white rounded-xl shadow-lg p-6;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .dark-mode .card {
-            @apply bg-gray-800 shadow-2xl;
-        }
-
-        .btn-primary {
-            @apply bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-purple-700 transition duration-200 ease-in-out transform hover:scale-105;
-        }
-
-        .btn-secondary {
-            @apply bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-200 ease-in-out transform hover:scale-105;
-        }
-
-        input[type="email"],
-        input[type="password"] {
-            @apply w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500;
-        }
-
-        .dark-mode input[type="email"],
-        .dark-mode input[type="password"] {
-            @apply bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400;
-        }
-
-        /* Verbeterde login pagina specifieke stijlen */
-        #auth-section {
-            @apply relative overflow-hidden;
-        }
-
-        #auth-section::before {
-            content: '';
-            @apply absolute inset-0 bg-gradient-to-br from-purple-200 to-blue-200 opacity-30 dark:from-purple-900 dark:to-blue-900 dark:opacity-50;
-            z-index: 0;
-            border-radius: 0.75rem; /* rounded-xl */
-        }
-
-        #auth-section > * {
-            position: relative; /* Zorg ervoor dat inhoud boven de pseudo-elementen blijft */
-            z-index: 1;
-        }
-
-        .auth-message-success {
-            @apply text-green-600 dark:text-green-400 font-semibold;
-        }
-
-        .auth-message-error {
-            @apply text-red-600 dark:text-red-400 font-semibold;
-        }
-
-        footer {
-            @apply mt-auto; /* Zorgt ervoor dat de footer onderaan blijft */
-        }
-    </style>
+    <title>Woordjes Leren met Codeblocks - Inloggen</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="script.js" defer></script>
 </head>
-<body class="dark-mode"> <!-- Standaard starten in donkere modus, kan worden gewijzigd door localStorage -->
-    <header class="bg-gradient-to-r from-purple-700 to-indigo-700 text-white p-4 shadow-md flex justify-between items-center rounded-b-xl w-full fixed top-0 left-0 z-10">
-        <h1 class="text-3xl font-bold">Woordenleren met Codeblocks 💻</h1>
-        <div class="flex items-center space-x-4">
-            <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition duration-200">
-                <span class="text-2xl">🌓</span>
-            </button>
-        </div>
-    </header>
-
-    <main class="container py-8 flex-grow flex items-center justify-center">
-        <!-- Authenticatie sectie -->
-        <section id="auth-section" class="card text-center w-full max-w-md">
-            <h2 class="text-4xl font-extrabold mb-6 text-purple-700 dark:text-purple-300">
-                <span class="mr-2">🚀</span> Welkom bij Woordenleren met Codeblocks!
-            </h2>
-            <p class="mb-6 text-lg text-gray-600 dark:text-gray-300">
-                Log in of registreer om je woordjes te leren en je eigen lijsten te maken!
-            </p>
-            <input type="email" id="email" placeholder="E-mailadres">
-            <input type="password" id="password" placeholder="Wachtwoord">
-            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <button id="login-btn" class="btn-primary">Inloggen</button>
-                <button id="register-btn" class="btn-secondary">Registreren</button>
+<body>
+    <div class="container">
+        <h1>Inloggen</h1>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" required>
             </div>
-            <p id="auth-message" class="mt-6 text-sm"></p>
-        </section>
-    </main>
-
-    <footer class="text-center py-4 text-gray-600 dark:text-gray-400 w-full">
-        <p>&copy; 2025 Codeblocks. Alle rechten voorbehouden.</p>
-    </footer>
-
-    <script type="module">
-        // Firebase SDK imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-
-        // Firebase configuratie en initialisatie
-        // Deze variabelen worden geleverd door de Canvas omgeving
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let app, auth, db;
-
-        // UI Elementen
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const loginBtn = document.getElementById('login-btn');
-        const registerBtn = document.getElementById('register-btn');
-        const authMessage = document.getElementById('auth-message');
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
-
-        // Functie om de authMessage te wissen
-        function clearAuthMessage() {
-            authMessage.textContent = '';
-            authMessage.className = 'mt-6 text-sm'; // Reset class
-        }
-
-        // Voeg event listeners toe om de authMessage te wissen bij input focus
-        emailInput.addEventListener('focus', clearAuthMessage);
-        passwordInput.addEventListener('focus', clearAuthMessage);
-
-        // Initialiseer Firebase en authenticatie
-        async function initializeFirebase() {
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Meld aan met aangepaste token (indien beschikbaar) of anoniem
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // Luister naar authenticatie statusveranderingen
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        console.log("Gebruiker ingelogd op loginpagina:", user.email || "Anoniem", "UID:", user.uid);
-                        // Stuur door naar de hoofdapplicatie
-                        window.location.href = 'app.html';
-                    } else {
-                        console.log("Geen gebruiker ingelogd op loginpagina.");
-                        // Zorg ervoor dat de login UI zichtbaar is
-                    }
-                });
-            } catch (error) {
-                console.error("Fout bij initialiseren Firebase op loginpagina:", error);
-                authMessage.textContent = `Fout: ${error.message}`;
-                authMessage.className = 'mt-6 text-sm auth-message-error';
-            }
-        }
-
-        // --- Authenticatie Functies ---
-        loginBtn.addEventListener('click', async () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                authMessage.textContent = 'Succesvol ingelogd! Je wordt doorgestuurd...';
-                authMessage.className = 'mt-6 text-sm auth-message-success';
-            } catch (error) {
-                authMessage.textContent = `Fout bij inloggen: ${error.message}. Controleer je e-mail en wachtwoord.`;
-                authMessage.className = 'mt-6 text-sm auth-message-error';
-                console.error("Login error:", error);
-            }
-        });
-
-        registerBtn.addEventListener('click', async () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                // Maak een gebruikersdocument aan in Firestore
-                await setDoc(doc(db, `artifacts/${appId}/users/${userCredential.user.uid}/profile`, 'user_data'), {
-                    email: userCredential.user.email,
-                    createdAt: new Date()
-                });
-                authMessage.textContent = 'Registratie succesvol! Je wordt doorgestuurd...';
-                authMessage.className = 'mt-6 text-sm auth-message-success';
-            } catch (error) {
-                authMessage.textContent = `Fout bij registreren: ${error.message}. Wachtwoord moet minimaal 6 tekens zijn.`;
-                authMessage.className = 'mt-6 text-sm auth-message-error';
-                console.error("Registration error:", error);
-            }
-        });
-
-        // --- Dark Mode Toggle ---
-        darkModeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-        });
-
-        // Pas thema toe bij het laden van de pagina
-        window.addEventListener('load', () => {
-            if (localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.remove('dark-mode');
-            }
-            initializeFirebase(); // Initialiseer Firebase nadat het thema is geladen
-        });
-    </script>
+            <div class="input-group">
+                <label for="password">Wachtwoord:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Inloggen</button>
+            <p class="message">Geen account? <a href="#">Registreer hier</a></p>
+        </form>
+    </div>
 </body>
 </html>
