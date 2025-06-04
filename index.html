@@ -6,7 +6,7 @@
     <title>Franse Woordenschat App</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons (for plus/trash, and profile) -->
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -71,46 +71,19 @@
             animation: fade-in-down 0.5s ease-out forwards;
         }
 
-        /* Popup specific styles (for both profile and login) */
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        /* Full page content styling */
+        .full-page-content {
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .popup-content {
-            background-color: white;
+            max-width: 500px; /* Max width for login/profile pages */
             padding: 2rem;
             border-radius: 1rem;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 400px;
-            position: relative;
+            margin-top: 2rem;
             transition: background-color 0.3s, color 0.3s;
         }
-        .popup-content.dark-mode {
+        .full-page-content.dark-mode {
             background-color: #4a5568; /* bg-gray-600 */
             color: #e2e8f0; /* text-gray-200 */
-        }
-        .popup-content .close-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280; /* gray-500 */
-        }
-        .popup-content.dark-mode .close-btn {
-            color: #cbd5e0; /* gray-300 */
         }
     </style>
 </head>
@@ -124,8 +97,8 @@
         <button id="darkModeToggle" class="p-3 rounded-full shadow-lg transition-colors duration-300 bg-yellow-400 text-gray-800 hover:bg-yellow-500" aria-label="Toggle dark mode">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 4a1 1 0 011 1v1a1 1 0 11-2 0V7a1 1 0 011-1zm-4 8a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4-4a1 1 0 011 1v1a1 1 0 11-2 0V7a1 1 0 011-1zm10.293-2.293a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM5.293 4.293a1 1 0 010 1.414L4.586 6.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM14.707 14.707a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM4.293 14.707a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 8a2 2 0 100 4 2 2 0 000-4z"></path></svg>
         </button>
-        <!-- Profile Button -->
-        <button id="profileBtn" class="p-3 rounded-full shadow-lg transition-colors duration-300 bg-blue-500 text-white hover:bg-blue-600" aria-label="Open profile settings">
+        <!-- Profile Button (only visible when logged in) -->
+        <button id="profileBtn" class="p-3 rounded-full shadow-lg transition-colors duration-300 bg-blue-500 text-white hover:bg-blue-600 hidden" aria-label="Open profile settings">
             <i class="fas fa-user"></i>
         </button>
     </div>
@@ -138,7 +111,79 @@
         Welkom, <span id="userNameSpan" class="font-bold text-blue-700">Gast</span>!
     </div>
 
-    <!-- Main App Content (hidden until logged in) -->
+    <!-- Login Page -->
+    <div id="loginPage" class="full-page-content hidden border border-gray-200">
+        <h2 class="text-2xl font-semibold mb-4">Inloggen / Registreren</h2>
+
+        <div class="mb-4">
+            <label for="loginEmailInput" class="block text-sm font-medium mb-1">E-mail:</label>
+            <input type="email" id="loginEmailInput" placeholder="jouw@email.com" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+        </div>
+
+        <div class="mb-6">
+            <label for="loginPasswordInput" class="block text-sm font-medium mb-1">Wachtwoord:</label>
+            <input type="password" id="loginPasswordInput" placeholder="Wachtwoord" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+        </div>
+
+        <div class="flex space-x-4">
+            <button id="loginBtn" class="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md">
+                Inloggen
+            </button>
+            <button id="registerBtn" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md">
+                Registreren
+            </button>
+        </div>
+        <p id="loginMessage" class="text-sm text-red-500 mt-4"></p>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="profilePage" class="full-page-content hidden border border-gray-200">
+        <button id="profileBackBtn" class="absolute top-4 left-4 p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors duration-200" aria-label="Terug naar app">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2 class="text-2xl font-semibold mb-4">Profiel Instellingen</h2>
+
+        <div class="mb-4">
+            <label for="userNameInput" class="block text-sm font-medium mb-1">Jouw Naam:</label>
+            <input type="text" id="userNameInput" placeholder="Voer je naam in" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+        </div>
+
+        <div class="mb-4">
+            <label for="profileEmailDisplay" class="block text-sm font-medium mb-1">E-mail:</label>
+            <input type="email" id="profileEmailDisplay" class="w-full p-3 rounded-lg border border-gray-300 themed-input bg-gray-100 cursor-not-allowed" disabled>
+        </div>
+
+        <div class="mb-4">
+            <label for="newPasswordInput" class="block text-sm font-medium mb-1">Nieuw Wachtwoord (min. 6 tekens):</label>
+            <input type="password" id="newPasswordInput" placeholder="Laat leeg om niet te wijzigen" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+        </div>
+
+        <div class="mb-6">
+            <label for="confirmNewPasswordInput" class="block text-sm font-medium mb-1">Bevestig Nieuw Wachtwoord:</label>
+            <input type="password" id="confirmNewPasswordInput" placeholder="Herhaal nieuw wachtwoord" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+        </div>
+        <button id="updatePasswordBtn" class="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md mb-4">
+            Wachtwoord Wijzigen
+        </button>
+        <p id="profileMessage" class="text-sm text-red-500 mt-2"></p>
+
+
+        <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-medium">Donkere Modus:</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" value="" id="profileDarkModeToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <p class="text-sm text-gray-500 mb-6">Je gebruikers-ID: <span id="profileUserIdSpan" class="font-mono text-blue-700"></span></p>
+
+        <button id="logoutBtn" class="w-full px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md">
+            Uitloggen
+        </button>
+    </div>
+
+    <!-- Main App Content -->
     <div id="mainAppContent" class="hidden w-full flex flex-col items-center">
         <!-- Navigation Buttons -->
         <div class="flex space-x-4 mb-8">
@@ -156,82 +201,6 @@
         <!-- Main Content Area -->
         <div id="contentArea" class="w-full max-w-2xl p-6 rounded-xl shadow-xl border bg-white border-gray-200">
             <!-- Content will be dynamically loaded here by JavaScript -->
-        </div>
-    </div>
-
-    <!-- Login Popup -->
-    <div id="loginPopupOverlay" class="popup-overlay hidden">
-        <div id="loginPopupContent" class="popup-content">
-            <h2 class="text-2xl font-semibold mb-4">Inloggen / Registreren</h2>
-
-            <div class="mb-4">
-                <label for="loginEmailInput" class="block text-sm font-medium mb-1">E-mail:</label>
-                <input type="email" id="loginEmailInput" placeholder="jouw@email.com" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
-            </div>
-
-            <div class="mb-6">
-                <label for="loginPasswordInput" class="block text-sm font-medium mb-1">Wachtwoord:</label>
-                <input type="password" id="loginPasswordInput" placeholder="Wachtwoord" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
-            </div>
-
-            <div class="flex space-x-4">
-                <button id="loginBtn" class="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md">
-                    Inloggen
-                </button>
-                <button id="registerBtn" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md">
-                    Registreren
-                </button>
-            </div>
-            <p id="loginMessage" class="text-sm text-red-500 mt-4"></p>
-        </div>
-    </div>
-
-    <!-- Profile Popup -->
-    <div id="profilePopupOverlay" class="popup-overlay hidden">
-        <div id="profilePopupContent" class="popup-content">
-            <button id="profileCloseBtn" class="close-btn">&times;</button>
-            <h2 class="text-2xl font-semibold mb-4">Profiel Instellingen</h2>
-
-            <div class="mb-4">
-                <label for="userNameInput" class="block text-sm font-medium mb-1">Jouw Naam:</label>
-                <input type="text" id="userNameInput" placeholder="Voer je naam in" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
-            </div>
-
-            <div class="mb-4">
-                <label for="profileEmailDisplay" class="block text-sm font-medium mb-1">E-mail:</label>
-                <input type="email" id="profileEmailDisplay" class="w-full p-3 rounded-lg border border-gray-300 themed-input bg-gray-100 cursor-not-allowed" disabled>
-                <!-- Optional: Add a button to change email if needed, but it requires re-authentication -->
-                <!-- <button id="changeEmailBtn" class="mt-2 px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600">E-mail Wijzigen</button> -->
-            </div>
-
-            <div class="mb-4">
-                <label for="newPasswordInput" class="block text-sm font-medium mb-1">Nieuw Wachtwoord (min. 6 tekens):</label>
-                <input type="password" id="newPasswordInput" placeholder="Laat leeg om niet te wijzigen" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
-            </div>
-
-            <div class="mb-6">
-                <label for="confirmNewPasswordInput" class="block text-sm font-medium mb-1">Bevestig Nieuw Wachtwoord:</label>
-                <input type="password" id="confirmNewPasswordInput" placeholder="Herhaal nieuw wachtwoord" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
-            </div>
-            <button id="updatePasswordBtn" class="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md mb-4">
-                Wachtwoord Wijzigen
-            </button>
-            <p id="profileMessage" class="text-sm text-red-500 mt-2"></p>
-
-
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-medium">Donkere Modus:</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" value="" id="profileDarkModeToggle" class="sr-only peer">
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                </label>
-            </div>
-
-            <p class="text-sm text-gray-500 mb-6">Je gebruikers-ID: <span id="profileUserIdSpan" class="font-mono text-blue-700"></span></p>
-
-            <button id="logoutBtn" class="w-full px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md">
-                Uitloggen
-            </button>
         </div>
     </div>
 
@@ -272,36 +241,37 @@
 
         // --- DOM Elements ---
         const messageDisplay = document.getElementById('messageDisplay');
-        const userNameDisplay = document.getElementById('userNameDisplay'); // New: User Name Display container
+        const userNameDisplay = document.getElementById('userNameDisplay'); // User Name Display container
         const userNameSpan = document.getElementById('userNameSpan'); // Span for user name
         const darkModeToggle = document.getElementById('darkModeToggle');
         const profileBtn = document.getElementById('profileBtn');
         const body = document.body;
+
+        // Page containers
+        const loginPage = document.getElementById('loginPage');
+        const profilePage = document.getElementById('profilePage');
         const mainAppContent = document.getElementById('mainAppContent'); // Main app container
-        const contentArea = document.getElementById('contentArea');
+
+        const contentArea = document.getElementById('contentArea'); // Content area within mainAppContent
         const viewSetsBtn = document.getElementById('viewSetsBtn');
         const createSetBtn = document.getElementById('createSetBtn');
         const addWordsBtn = document.getElementById('addWordsBtn');
 
-        // Login Popup DOM elements
-        const loginPopupOverlay = document.getElementById('loginPopupOverlay');
-        const loginPopupContent = document.getElementById('loginPopupContent');
+        // Login Page DOM elements
         const loginEmailInput = document.getElementById('loginEmailInput');
         const loginPasswordInput = document.getElementById('loginPasswordInput');
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const loginMessage = document.getElementById('loginMessage');
 
-        // Profile Popup DOM elements
-        const profilePopupOverlay = document.getElementById('profilePopupOverlay');
-        const profilePopupContent = document.getElementById('profilePopupContent');
-        const profileCloseBtn = document.getElementById('profileCloseBtn');
+        // Profile Page DOM elements
+        const profileBackBtn = document.getElementById('profileBackBtn'); // New back button on profile page
         const userNameInput = document.getElementById('userNameInput');
-        const profileEmailDisplay = document.getElementById('profileEmailDisplay'); // New: Email display
-        const newPasswordInput = document.getElementById('newPasswordInput'); // New: New password input
-        const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput'); // New: Confirm password input
-        const updatePasswordBtn = document.getElementById('updatePasswordBtn'); // New: Update password button
-        const profileMessage = document.getElementById('profileMessage'); // New: Message for profile popup
+        const profileEmailDisplay = document.getElementById('profileEmailDisplay'); // Email display
+        const newPasswordInput = document.getElementById('newPasswordInput'); // New password input
+        const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput'); // Confirm password input
+        const updatePasswordBtn = document.getElementById('updatePasswordBtn'); // Update password button
+        const profileMessage = document.getElementById('profileMessage'); // Message for profile page
         const profileDarkModeToggle = document.getElementById('profileDarkModeToggle');
         const profileUserIdSpan = document.getElementById('profileUserIdSpan');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -335,6 +305,31 @@
          */
         function normalizeString(str) {
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
+        /**
+         * Manages which main section/page is visible.
+         * @param {string} pageToShow - 'login', 'main', or 'profile'.
+         */
+        function showPage(pageToShow) {
+            loginPage.classList.add('hidden');
+            mainAppContent.classList.add('hidden');
+            profilePage.classList.add('hidden');
+            profileBtn.classList.add('hidden'); // Hide profile button by default
+
+            if (pageToShow === 'login') {
+                loginPage.classList.remove('hidden');
+                userNameDisplay.classList.add('hidden'); // Hide user name on login page
+            } else if (pageToShow === 'main') {
+                mainAppContent.classList.remove('hidden');
+                profileBtn.classList.remove('hidden'); // Show profile button on main app
+                userNameDisplay.classList.remove('hidden'); // Show user name on main app
+            } else if (pageToShow === 'profile') {
+                profilePage.classList.remove('hidden');
+                userNameDisplay.classList.add('hidden'); // Hide user name on profile page
+                profileBtn.classList.add('hidden'); // Hide profile button on profile page
+            }
+            applyTheme(); // Re-apply theme to ensure new page is styled correctly
         }
 
         /**
@@ -407,7 +402,7 @@
 
             // Update user name display panel
             const userNameDisplayPanel = document.getElementById('userNameDisplay');
-            if (userNameDisplayPanel) { // Check if element exists
+            if (userNameDisplayPanel) {
                 if (isDarkMode) {
                     userNameDisplayPanel.classList.remove('bg-white', 'text-gray-600');
                     userNameDisplayPanel.classList.add('bg-gray-600', 'text-gray-200');
@@ -416,7 +411,6 @@
                     userNameDisplayPanel.classList.add('bg-white', 'text-gray-600');
                 }
             }
-
 
             // Update card front/back colors dynamically
             const cardFronts = document.querySelectorAll('.card-front');
@@ -430,25 +424,26 @@
                 card.classList.add(isDarkMode ? 'dark-mode' : 'light-mode');
             });
 
-            // Update profile popup content theme
-            if (profilePopupContent) {
+            // Update full-page content themes (login and profile pages)
+            const fullPageContents = document.querySelectorAll('.full-page-content');
+            fullPageContents.forEach(page => {
                 if (isDarkMode) {
-                    profilePopupContent.classList.add('dark-mode');
-                    profilePopupContent.classList.remove('light-mode');
+                    page.classList.add('dark-mode');
+                    page.classList.remove('light-mode');
                 } else {
-                    profilePopupContent.classList.remove('dark-mode');
-                    profilePopupContent.classList.add('light-mode');
+                    page.classList.remove('dark-mode');
+                    page.classList.add('light-mode');
                 }
-            }
+            });
 
-            // Update login popup content theme
-            if (loginPopupContent) {
+            // Update profile back button theme
+            if (profileBackBtn) {
                 if (isDarkMode) {
-                    loginPopupContent.classList.add('dark-mode');
-                    loginPopupContent.classList.remove('light-mode');
+                    profileBackBtn.classList.remove('bg-gray-200', 'hover:bg-gray-300', 'text-gray-700');
+                    profileBackBtn.classList.add('bg-gray-700', 'hover:bg-gray-600', 'text-gray-200');
                 } else {
-                    loginPopupContent.classList.remove('dark-mode');
-                    loginPopupContent.classList.add('light-mode');
+                    profileBackBtn.classList.remove('bg-gray-700', 'hover:bg-gray-600', 'text-gray-200');
+                    profileBackBtn.classList.add('bg-gray-200', 'hover:bg-gray-300', 'text-gray-700');
                 }
             }
         }
@@ -479,14 +474,12 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
-                        userNameSpan.textContent = userName; // Display current user name on main screen
-                        profileUserIdSpan.textContent = currentUserId; // Update user ID in profile popup
-                        profileEmailDisplay.value = user.email || ''; // Display user email in profile popup
+                        profileUserIdSpan.textContent = currentUserId; // Update user ID in profile page
+                        profileEmailDisplay.value = user.email || ''; // Display user email in profile page
                         isAuthReady = true;
                         await loadUserProfile(); // Load user profile (name, dark mode preference)
                         setupSetsListener(); // Start listening for sets once authenticated
-                        mainAppContent.classList.remove('hidden'); // Show main app content
-                        loginPopupOverlay.classList.add('hidden'); // Hide login popup
+                        showPage('main'); // Show main app content
                         setMode('viewSets'); // Go to default view
                     } else {
                         // User is signed out or not authenticated
@@ -495,8 +488,7 @@
                         userNameSpan.textContent = 'Gast'; // Reset user name display
                         profileUserIdSpan.textContent = 'Niet ingelogd';
                         profileEmailDisplay.value = '';
-                        mainAppContent.classList.add('hidden'); // Hide main app content
-                        loginPopupOverlay.classList.remove('hidden'); // Show login popup
+                        showPage('login'); // Show login page
                         showMessage("Log in om de app te gebruiken.");
                     }
                 });
@@ -719,7 +711,6 @@
                 return;
             }
 
-            // Use window.confirm for confirmation (as per instructions, no custom modal needed for HTML/JS)
             if (!window.confirm("Weet je zeker dat je deze set wilt verwijderen?")) {
                 return;
             }
@@ -1120,7 +1111,7 @@
             applyTheme(); // Apply theme to new content
         }
 
-        // --- Login Popup Functions ---
+        // --- Login Page Functions ---
 
         /**
          * Handles user login with email and password.
@@ -1186,21 +1177,21 @@
             }
         }
 
-        // --- Profile Popup Functions ---
-        function openProfilePopup() {
-            profilePopupOverlay.classList.remove('hidden');
+        // --- Profile Page Functions ---
+        function navigateToProfile() {
+            showPage('profile');
             userNameInput.value = userName; // Set input value to current userName
             profileDarkModeToggle.checked = isDarkMode; // Set toggle state
             profileEmailDisplay.value = auth.currentUser ? auth.currentUser.email : ''; // Display current email
             profileMessage.textContent = ''; // Clear previous messages
             newPasswordInput.value = ''; // Clear password fields
             confirmNewPasswordInput.value = '';
-            applyTheme(); // Ensure popup is themed correctly on open
+            applyTheme(); // Ensure page is themed correctly on open
         }
 
-        function closeProfilePopup() {
-            profilePopupOverlay.classList.add('hidden');
-            // Save profile when closing, in case changes were made
+        function navigateBackToMainApp() {
+            showPage('main');
+            // Save profile when navigating back, in case changes were made
             saveUserProfile();
         }
 
@@ -1256,7 +1247,7 @@
         async function handleLogout() {
             try {
                 await signOut(auth);
-                // onAuthStateChanged will handle UI update on successful logout
+                // onAuthStateChanged will handle UI update on successful logout (showing login page)
                 showMessage("Succesvol uitgelogd.");
             } catch (error) {
                 showMessage(`Fout bij uitloggen: ${error.message}`);
@@ -1267,37 +1258,25 @@
         // --- Event Listeners for Main Navigation ---
         viewSetsBtn.onclick = () => setMode('viewSets');
         createSetBtn.onclick = () => setMode('createSet');
-        addWordsBtn.onclick = () => setMode('addWords'); // This button is hidden/shown by setMode function
+        addWordsBtn.onclick = () => setMode('addWords');
 
         // Event listener for Dark Mode Toggle (main button)
         darkModeToggle.onclick = () => {
             isDarkMode = !isDarkMode;
-            profileDarkModeToggle.checked = isDarkMode; // Sync popup toggle
+            profileDarkModeToggle.checked = isDarkMode; // Sync profile toggle
             applyTheme(); // Apply theme immediately
             saveUserProfile(); // Save theme preference
         };
 
-        // Event listener for Profile Button
-        profileBtn.onclick = openProfilePopup;
+        // Event listener for Profile Button (on main app content)
+        profileBtn.onclick = navigateToProfile;
 
-        // Event listeners for Login Popup
+        // Event listeners for Login Page
         loginBtn.onclick = handleLogin;
         registerBtn.onclick = handleRegister;
-        // Close login popup if clicking outside (only if not authenticated)
-        loginPopupOverlay.onclick = (e) => {
-            if (e.target === loginPopupOverlay && !currentUserId) {
-                // Do not allow closing if not logged in
-                // loginPopupOverlay.classList.add('hidden');
-            }
-        };
 
-        // Event listeners for Profile Popup
-        profileCloseBtn.onclick = closeProfilePopup;
-        profilePopupOverlay.onclick = (e) => { // Close when clicking outside content
-            if (e.target === profilePopupOverlay) {
-                closeProfilePopup();
-            }
-        };
+        // Event listeners for Profile Page
+        profileBackBtn.onclick = navigateBackToMainApp;
         logoutBtn.onclick = handleLogout; // Attach logout function to button
         updatePasswordBtn.onclick = handleUpdatePassword; // Attach password update function
 
@@ -1307,7 +1286,7 @@
             saveUserProfile();
         };
 
-        profileDarkModeToggle.onchange = () => { // Sync dark mode from popup to global state
+        profileDarkModeToggle.onchange = () => { // Sync dark mode from profile page to global state
             isDarkMode = profileDarkModeToggle.checked;
             applyTheme(); // Apply theme immediately
             saveUserProfile(); // Save theme preference
