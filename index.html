@@ -1,61 +1,174 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Woordjes Leren App</title>
-    <!-- Laad Tailwind CSS voor snelle en responsieve styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Gebruik het Inter lettertype voor een moderne uitstraling -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Link naar het gedeelde CSS-bestand -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Woordjes Leren App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Rubik', sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #4f46e5;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .container {
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    .flashcard, .quiz, .auth {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    button {
+      background: #4f46e5;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    input {
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 min-h-screen flex flex-col items-center justify-center p-4 font-inter text-gray-800">
-    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl text-center">
-        <h1 class="text-5xl font-extrabold text-indigo-700 mb-6 drop-shadow-lg">Woordjes Leren! 🎉</h1>
-        <p class="text-lg text-gray-600 mb-8">Voeg hier je nieuwe woorden toe en begin met leren!</p>
-
-        <!-- Sectie voor het toevoegen van nieuwe woorden -->
-        <div class="mb-10 p-6 bg-blue-50 rounded-lg shadow-inner">
-            <h2 class="text-3xl font-bold text-blue-700 mb-4">Voeg een nieuw woord toe</h2>
-            <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                <input type="text" id="wordInput" placeholder="Woord (bijv. 'bonjour')" class="flex-1 p-3 rounded-lg border-2 border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-lg">
-                <input type="text" id="translationInput" placeholder="Vertaling (bijv. 'hallo')" class="flex-1 p-3 rounded-lg border-2 border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-lg">
-            </div>
-            <button id="addWordButton" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 shadow-md">
-                Woord Toevoegen
-            </button>
-            <p id="message" class="text-sm mt-3 text-green-600 font-semibold"></p>
-        </div>
-
-        <!-- Lijst met toegevoegde woorden -->
-        <div class="mb-10 p-6 bg-yellow-50 rounded-lg shadow-inner">
-            <h2 class="text-3xl font-bold text-yellow-700 mb-4">Jouw woordenlijst</h2>
-            <div id="wordList" class="max-h-60 overflow-y-auto border border-yellow-200 rounded-lg p-3 bg-white">
-                <!-- Woorden worden hier dynamisch toegevoegd -->
-                <p class="text-gray-500" id="noWordsMessage">Nog geen woorden toegevoegd. Voeg er hierboven een paar toe!</p>
-            </div>
-        </div>
-
-        <!-- Navigatieknoppen -->
-        <div class="flex flex-col sm:flex-row justify-center gap-6">
-            <a href="flashcards.html" class="bg-green-500 text-white font-bold py-4 px-8 rounded-lg text-xl hover:bg-green-600 transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h10m-9 4h8a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Flashcards
-            </a>
-            <a href="quiz.html" class="bg-orange-500 text-white font-bold py-4 px-8 rounded-lg text-xl hover:bg-orange-600 transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                Quiz
-            </a>
-        </div>
+<body>
+  <header>Woordjes Leren App</header>
+  <div class="container">
+    <div class="auth">
+      <h2>Inloggen</h2>
+      <input type="email" id="email" placeholder="E-mail">
+      <input type="password" id="password" placeholder="Wachtwoord">
+      <button onclick="login()">Login</button>
+      <button onclick="signup()">Registreren</button>
+      <p id="auth-status"></p>
     </div>
 
-    <!-- Link naar het JavaScript-bestand voor de hoofdpagina -->
-    <script src="index.js"></script>
+    <div class="flashcard">
+      <h2>Flashcard</h2>
+      <p id="flashcard-question">Klik op volgende om te starten</p>
+      <button onclick="showNextFlashcard()">Volgende</button>
+    </div>
+
+    <div class="quiz">
+      <h2>Quiz</h2>
+      <p id="quiz-question">Wat is het Franse woord voor 'appel'?</p>
+      <input type="text" id="quiz-answer" placeholder="Typ je antwoord...">
+      <button onclick="checkAnswer()">Controleer</button>
+      <p id="quiz-feedback"></p>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB59BVbioUciigC0l47T1tQAsF_kPs2Frs",
+      authDomain: "leer-app.firebaseapp.com",
+      projectId: "leer-app",
+      storageBucket: "leer-app.firebasestorage.app",
+      messagingSenderId: "1029710103221",
+      appId: "1:1029710103221:web:386173aefbed03015574fc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.login = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        document.getElementById("auth-status").textContent = "Ingelogd als " + email;
+      } catch (error) {
+        document.getElementById("auth-status").textContent = "Fout bij inloggen: " + error.message;
+      }
+    }
+
+    window.signup = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        document.getElementById("auth-status").textContent = "Account aangemaakt voor " + email;
+      } catch (error) {
+        document.getElementById("auth-status").textContent = "Fout bij registratie: " + error.message;
+      }
+    }
+
+    let flashcards = [
+      { nl: "hond", fr: "chien" },
+      { nl: "kat", fr: "chat" },
+      { nl: "huis", fr: "maison" }
+    ];
+
+    let currentFlashcard = 0;
+
+    window.showNextFlashcard = function () {
+      const card = flashcards[currentFlashcard];
+      document.getElementById('flashcard-question').textContent = `Wat is het Franse woord voor "${card.nl}"?`;
+      currentFlashcard = (currentFlashcard + 1) % flashcards.length;
+    }
+
+    window.checkAnswer = function () {
+      const input = document.getElementById('quiz-answer').value.trim().toLowerCase();
+      const correct = "pomme"; // tijdelijk hardcoded
+      const feedback = document.getElementById('quiz-feedback');
+      if (input === correct) {
+        feedback.textContent = "✅ Correct!";
+        feedback.style.color = "green";
+      } else if (levenshtein(input, correct) <= 2) {
+        feedback.textContent = "Bijna goed! Kleine spelfout.";
+        feedback.style.color = "orange";
+      } else {
+        feedback.textContent = "❌ Fout. Het juiste antwoord is: " + correct;
+        feedback.style.color = "red";
+      }
+    }
+
+    function levenshtein(a, b) {
+      const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+      for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+      for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          dp[i][j] = Math.min(
+            dp[i - 1][j] + 1,
+            dp[i][j - 1] + 1,
+            dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+          );
+        }
+      }
+      return dp[a.length][b.length];
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("auth-status").textContent = "Ingelogd als: " + user.email;
+      }
+    });
+  </script>
 </body>
 </html>
