@@ -63,6 +63,17 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6; /* blue-500 */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800">
@@ -72,8 +83,14 @@
     <!-- Message Display -->
     <div id="messageDisplay" class="hidden bg-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 shadow-md"></div>
 
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="flex flex-col items-center justify-center text-lg text-gray-600 dark:text-gray-300">
+        <div class="spinner mb-4"></div>
+        <p>Laden...</p>
+    </div>
+
     <!-- Login/Register Form -->
-    <div id="loginRegisterForm" class="full-page-content border border-gray-200">
+    <div id="loginRegisterForm" class="full-page-content border border-gray-200 hidden">
         <h2 class="text-2xl font-semibold mb-4">Inloggen / Registreren</h2>
 
         <div class="mb-4">
@@ -101,7 +118,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
         // --- Global Variables ---
         let app;
@@ -119,6 +136,7 @@
         const loginMessage = document.getElementById('loginMessage');
         const body = document.body;
         const loginRegisterForm = document.getElementById('loginRegisterForm');
+        const loadingSpinner = document.getElementById('loadingSpinner'); // New spinner element
 
         // --- Helper Functions ---
         function showMessage(msg, isError = true) {
@@ -174,6 +192,10 @@
         // --- Firebase Initialization ---
         async function initializeFirebase() {
             try {
+                // Show loading spinner initially
+                loadingSpinner.classList.remove('hidden');
+                loginRegisterForm.classList.add('hidden'); // Hide form initially
+
                 const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
                     "apiKey": "AIzaSyB59BVbioUciigC0l47T1tQAsF_kPs2Frs",
                     "authDomain": "leer-app.firebaseapp.com",
@@ -187,18 +209,39 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // This flag helps ensure onAuthStateChanged only acts after initial check
+                let initialAuthCheckComplete = false;
+
                 onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        // User is logged in, redirect to home.html
-                        window.location.href = 'home.html';
+                    if (initialAuthCheckComplete) {
+                        // Only perform redirects after the initial check is done
+                        if (user) {
+                            window.location.href = 'home.html';
+                        } else {
+                            // User logged out or failed login, show form
+                            loadingSpinner.classList.add('hidden');
+                            loginRegisterForm.classList.remove('hidden');
+                            applyTheme();
+                        }
                     } else {
-                        // Not logged in, stay on this page
-                        applyTheme(); // Apply theme if not logged in
+                        // First time onAuthStateChanged fires
+                        initialAuthCheckComplete = true;
+                        if (user) {
+                            window.location.href = 'home.html';
+                        } else {
+                            // No user logged in, show the login form
+                            loadingSpinner.classList.add('hidden');
+                            loginRegisterForm.classList.remove('hidden');
+                            applyTheme();
+                        }
                     }
                 });
             } catch (error) {
                 showMessage(`Fout bij initialiseren Firebase: ${error.message}`);
                 console.error("Error initializing Firebase:", error);
+                loadingSpinner.classList.add('hidden'); // Hide spinner on error
+                loginRegisterForm.classList.remove('hidden'); // Show form anyway
+                applyTheme();
             }
         }
 
