@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inloggen - Franse Woordenschat App</title>
+    <title>Profiel - Franse Woordenschat App</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,7 +18,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 1rem;
         }
         .full-page-content {
@@ -26,7 +27,7 @@
             border-radius: 1rem;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             transition: background-color 0.3s, color 0.3s;
-            text-align: center;
+            position: relative; /* Nodig voor absolute positionering van terugknop */
         }
         .themed-input {
             border-color: #d1d5db; /* gray-300 */
@@ -37,7 +38,7 @@
             ring-color: #3b82f6; /* blue-500 */
             border-color: #3b82f6; /* blue-500 */
         }
-        /* Dark mode overrides for specific elements */
+        /* Donkere modus overschrijvingen voor specifieke elementen */
         body.dark-mode {
             background-color: #1f2937; /* gray-900 */
             color: #f3f4f6; /* gray-100 */
@@ -56,7 +57,15 @@
             ring-color: #60a5fa; /* blue-400 */
             border-color: #60a5fa; /* blue-400 */
         }
-        #messageDisplay {
+        #profileBackBtn.light-mode {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #4b5563; /* gray-700 */
+        }
+        #profileBackBtn.dark-mode {
+            background-color: #4b5563; /* gray-700 */
+            color: #e5e7eb; /* gray-200 */
+        }
+        #profileMessage {
             animation: fade-in-down 0.5s ease-out forwards;
         }
         @keyframes fade-in-down {
@@ -69,109 +78,147 @@
 
     <h1 class="text-4xl font-bold text-blue-800 mb-6 drop-shadow-md">Franse Woordenschat</h1>
 
-    <!-- Message Display -->
-    <div id="messageDisplay" class="hidden bg-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 shadow-md"></div>
-
-    <!-- Login/Register Form -->
-    <div id="loginRegisterForm" class="full-page-content border border-gray-200">
-        <h2 class="text-2xl font-semibold mb-4">Inloggen / Registreren</h2>
+    <!-- Profielpagina Inhoud -->
+    <div id="profilePageContent" class="full-page-content border border-gray-200">
+        <button id="profileBackBtn" class="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-300 transition-colors duration-200" aria-label="Terug naar app">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Profiel Instellingen</h2>
 
         <div class="mb-4">
-            <label for="loginEmailInput" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">E-mail:</label>
-            <input type="email" id="loginEmailInput" placeholder="jouw@email.com" class="w-full p-3 rounded-lg themed-input">
+            <label for="userNameInput" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Jouw Naam:</label>
+            <input type="text" id="userNameInput" placeholder="Voer je naam in" class="w-full p-3 rounded-lg themed-input">
+        </div>
+
+        <div class="mb-4">
+            <label for="profileEmailDisplay" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">E-mail:</label>
+            <input type="email" id="profileEmailDisplay" class="w-full p-3 rounded-lg themed-input bg-gray-100 cursor-not-allowed dark:bg-gray-800" disabled>
+        </div>
+
+        <div class="mb-4">
+            <label for="newPasswordInput" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Nieuw Wachtwoord (min. 6 tekens):</label>
+            <input type="password" id="newPasswordInput" placeholder="Laat leeg om niet te wijzigen" class="w-full p-3 rounded-lg themed-input">
         </div>
 
         <div class="mb-6">
-            <label for="loginPasswordInput" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Wachtwoord:</label>
-            <input type="password" id="loginPasswordInput" placeholder="Wachtwoord" class="w-full p-3 rounded-lg themed-input">
+            <label for="confirmNewPasswordInput" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Bevestig Nieuw Wachtwoord:</label>
+            <input type="password" id="confirmNewPasswordInput" placeholder="Herhaal nieuw wachtwoord" class="w-full p-3 rounded-lg themed-input">
+        </div>
+        <button id="updatePasswordBtn" class="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md mb-4">
+            Wachtwoord Wijzigen
+        </button>
+        <p id="profileMessage" class="text-sm text-red-500 mt-2"></p>
+
+
+        <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Donkere Modus:</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" value="" id="profileDarkModeToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
         </div>
 
-        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-            <button id="loginBtn" class="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md">
-                Inloggen
-            </button>
-            <button id="registerBtn" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md">
-                Registreren
-            </button>
-        </div>
-        <p id="loginMessage" class="text-sm text-red-500 mt-4"></p>
+        <p class="text-sm text-gray-500 mb-6">Je gebruikers-ID: <span id="profileUserIdSpan" class="font-mono text-blue-700 dark:text-blue-300"></span></p>
+
+        <button id="logoutBtn" class="w-full px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md">
+            Uitloggen
+        </button>
     </div>
 
-    <!-- Firebase SDK and Login/Register Logic -->
+    <!-- Firebase SDK en Applicatielogica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-        // --- Global Variables ---
+        // --- Globale Applicatiestatus Variabelen ---
         let app;
-        let auth;
         let db;
-        let messageTimeout = null;
-        let isDarkMode = false; // State for dark mode
+        let auth;
+        let currentUserId = null;
+        let isAuthReady = false;
 
-        // --- DOM Elements ---
-        const messageDisplay = document.getElementById('messageDisplay');
-        const loginEmailInput = document.getElementById('loginEmailInput');
-        const loginPasswordInput = document.getElementById('loginPasswordInput');
-        const loginBtn = document.getElementById('loginBtn');
-        const registerBtn = document.getElementById('registerBtn');
-        const loginMessage = document.getElementById('loginMessage');
+        let isDarkMode = false; // Themastatus
+        let userName = 'Gast'; // Standaard gebruikersnaam
+
+        // --- DOM Elementen ---
+        const profilePageContent = document.getElementById('profilePageContent');
+        const profileBackBtn = document.getElementById('profileBackBtn');
+        const userNameInput = document.getElementById('userNameInput');
+        const profileEmailDisplay = document.getElementById('profileEmailDisplay');
+        const newPasswordInput = document.getElementById('newPasswordInput');
+        const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput');
+        const updatePasswordBtn = document.getElementById('updatePasswordBtn');
+        const profileMessage = document.getElementById('profileMessage');
+        const profileDarkModeToggle = document.getElementById('profileDarkModeToggle');
+        const profileUserIdSpan = document.getElementById('profileUserIdSpan');
+        const logoutBtn = document.getElementById('logoutBtn');
         const body = document.body;
-        const loginRegisterForm = document.getElementById('loginRegisterForm');
 
-        // --- Helper Functions ---
+        let messageTimeout = null; // voor profielpagina berichten
+
+        // --- Hulpfuncties ---
         function showMessage(msg, isError = true) {
-            messageDisplay.textContent = msg;
-            messageDisplay.classList.remove('hidden', 'bg-yellow-200', 'bg-green-200', 'text-yellow-800', 'text-green-800', 'text-red-500');
+            profileMessage.textContent = msg;
+            profileMessage.classList.remove('hidden', 'text-green-500', 'text-red-500');
             if (isError) {
-                messageDisplay.classList.add('bg-red-200', 'text-red-800');
+                profileMessage.classList.add('text-red-500');
             } else {
-                messageDisplay.classList.add('bg-green-200', 'text-green-800');
+                profileMessage.classList.add('text-green-500');
             }
-            messageDisplay.classList.add('animate-fade-in-down');
+            profileMessage.classList.add('animate-fade-in-down');
 
             if (messageTimeout) {
                 clearTimeout(messageTimeout);
             }
             messageTimeout = setTimeout(() => {
-                messageDisplay.classList.add('hidden');
-                messageDisplay.classList.remove('animate-fade-in-down');
+                profileMessage.classList.add('hidden');
+                profileMessage.classList.remove('animate-fade-in-down');
             }, 3000);
         }
 
         function applyTheme() {
-            // Check if dark mode is active from localStorage (set by profile page)
-            isDarkMode = localStorage.getItem('isDarkMode') === 'true';
+            isDarkMode = localStorage.getItem('isDarkMode') === 'true'; // Haal thema op uit localStorage
 
             if (isDarkMode) {
                 body.classList.add('dark-mode');
-                body.classList.remove('bg-gradient-to-br', 'from-blue-100', 'to-purple-100', 'text-gray-800');
+                body.classList.remove('light-mode', 'bg-gradient-to-br', 'from-blue-100', 'to-purple-100', 'text-gray-800');
                 body.classList.add('bg-gray-900', 'text-gray-100');
 
-                loginRegisterForm.classList.add('dark-mode');
-                loginRegisterForm.classList.remove('bg-white', 'border-gray-200');
-
-                document.querySelectorAll('.themed-input').forEach(input => {
-                    input.classList.add('dark-mode');
-                    input.classList.remove('light-mode');
-                });
+                profilePageContent.classList.add('dark-mode');
+                profilePageContent.classList.remove('bg-white', 'border-gray-200');
             } else {
-                body.classList.remove('dark-mode');
-                body.classList.add('bg-gradient-to-br', 'from-blue-100', 'to-purple-100', 'text-gray-800');
-                body.classList.remove('bg-gray-900', 'text-gray-100');
+                body.classList.remove('dark-mode', 'bg-gray-900', 'text-gray-100');
+                body.classList.add('light-mode', 'bg-gradient-to-br', 'from-blue-100', 'to-purple-100', 'text-gray-800');
 
-                loginRegisterForm.classList.remove('dark-mode');
-                loginRegisterForm.classList.add('bg-white', 'border-gray-200');
+                profilePageContent.classList.remove('dark-mode');
+                profilePageContent.classList.add('bg-white', 'border-gray-200');
+            }
 
-                document.querySelectorAll('.themed-input').forEach(input => {
-                    input.classList.remove('dark-mode');
-                    input.classList.add('light-mode');
-                });
+            // Werk invoerveldstijlen bij
+            document.querySelectorAll('.themed-input').forEach(input => {
+                if (isDarkMode) {
+                    input.classList.remove('border-gray-300', 'focus:ring-blue-500', 'focus:border-blue-500', 'bg-white', 'text-gray-800');
+                    input.classList.add('border-gray-500', 'focus:ring-blue-400', 'focus:border-blue-400', 'bg-gray-800', 'text-gray-100');
+                } else {
+                    input.classList.remove('border-gray-500', 'focus:ring-blue-400', 'focus:border-blue-400', 'bg-gray-800', 'text-gray-100');
+                    input.classList.add('border-gray-300', 'focus:ring-blue-500', 'focus:border-blue-500', 'bg-white', 'text-gray-800');
+                }
+            });
+
+            // Werk profiel terugknop thema bij
+            if (profileBackBtn) {
+                if (isDarkMode) {
+                    profileBackBtn.classList.remove('bg-gray-200', 'hover:bg-gray-300', 'text-gray-700');
+                    profileBackBtn.classList.add('bg-gray-700', 'hover:bg-gray-600', 'text-gray-200');
+                } else {
+                    profileBackBtn.classList.remove('bg-gray-700', 'hover:bg-gray-600', 'text-gray-200');
+                    profileBackBtn.classList.add('bg-gray-200', 'hover:bg-gray-300', 'text-gray-700');
+                }
             }
         }
 
-        // --- Firebase Initialization ---
+        // --- Firebase Initialisatie ---
         async function initializeFirebase() {
             try {
                 const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
@@ -187,93 +234,142 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                onAuthStateChanged(auth, (user) => {
+                onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        // User is logged in, redirect to home.html
-                        window.location.href = 'home.html';
+                        currentUserId = user.uid;
+                        isAuthReady = true;
+                        profileUserIdSpan.textContent = currentUserId;
+                        profileEmailDisplay.value = user.email || '';
+                        await loadUserProfile(); // Laad gebruikersprofiel (naam, donkere modus voorkeur)
+                        applyTheme(); // Pas thema toe
                     } else {
-                        // Not logged in, stay on this page
-                        applyTheme(); // Apply theme if not logged in
+                        // Gebruiker is NIET ingelogd, stuur door naar index.html
+                        window.location.href = 'index.html';
                     }
                 });
             } catch (error) {
                 showMessage(`Fout bij initialiseren Firebase: ${error.message}`);
                 console.error("Error initializing Firebase:", error);
+                applyTheme();
             }
         }
 
-        // --- Authentication Functions ---
-        async function handleLogin() {
-            const email = loginEmailInput.value.trim();
-            const password = loginPasswordInput.value.trim();
-            loginMessage.textContent = ''; // Clear previous messages
+        // --- Gebruikersprofiel Beheer (Firestore) ---
+        async function loadUserProfile() {
+            if (!db || !currentUserId) return;
 
-            if (!email || !password) {
-                loginMessage.textContent = "Vul zowel e-mail als wachtwoord in.";
-                return;
-            }
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const userProfileDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/userProfile`, 'settings');
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
-                // onAuthStateChanged will handle redirect
-            } catch (error) {
-                let errorMessage = "Inloggen mislukt.";
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMessage = "Onjuiste e-mail of wachtwoord.";
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = "Ongeldig e-mailadres.";
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMessage = "Te veel mislukte inlogpogingen. Probeer later opnieuw.";
+                const docSnap = await getDoc(userProfileDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    userName = data.name || 'Gast';
+                    isDarkMode = data.isDarkMode || false;
+                    localStorage.setItem('isDarkMode', isDarkMode); // Opslaan in local storage
+                    userNameInput.value = userName; // Werk profielinvoer bij
+                    profileDarkModeToggle.checked = isDarkMode; // Werk profielschakelaar bij
+                    applyTheme(); // Pas thema toe op basis van geladen voorkeur
+                } else {
+                    await setDoc(userProfileDocRef, {
+                        name: userName,
+                        isDarkMode: isDarkMode
+                    });
+                    localStorage.setItem('isDarkMode', isDarkMode);
                 }
-                loginMessage.textContent = errorMessage;
-                console.error("Login error:", error);
+            } catch (error) {
+                showMessage(`Fout bij laden profiel: ${error.message}`);
+                console.error("Error loading user profile:", error);
             }
         }
 
-        async function handleRegister() {
-            const email = loginEmailInput.value.trim();
-            const password = loginPasswordInput.value.trim();
-            loginMessage.textContent = ''; // Clear previous messages
+        async function saveUserProfile() {
+            if (!db || !currentUserId) return;
 
-            if (!email || !password) {
-                loginMessage.textContent = "Vul zowel e-mail als wachtwoord in.";
-                return;
-            }
-            if (password.length < 6) {
-                loginMessage.textContent = "Wachtwoord moet minimaal 6 tekens lang zijn.";
-                return;
-            }
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const userProfileDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/userProfile`, 'settings');
 
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                // After successful registration, save default profile settings
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const userProfileDocRef = doc(db, `artifacts/${appId}/users/${userCredential.user.uid}/userProfile`, 'settings');
-                await setDoc(userProfileDocRef, {
-                    name: 'Nieuwe Gebruiker',
-                    isDarkMode: false
+                await updateDoc(userProfileDocRef, {
+                    name: userName,
+                    isDarkMode: isDarkMode
                 });
-                showMessage("Account succesvol aangemaakt! Je wordt doorgestuurd...", false);
-                // onAuthStateChanged will handle redirect
+                localStorage.setItem('isDarkMode', isDarkMode);
+                showMessage("Profiel opgeslagen!", false);
             } catch (error) {
-                let errorMessage = "Registratie mislukt.";
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = "Dit e-mailadres is al in gebruik.";
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = "Wachtwoord is te zwak.";
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = "Ongeldig e-mailadres.";
-                }
-                loginMessage.textContent = errorMessage;
-                console.error("Registration error:", error);
+                showMessage(`Fout bij opslaan profiel: ${error.message}`);
+                console.error("Error saving user profile:", error);
             }
         }
 
-        // --- Event Listeners ---
-        loginBtn.addEventListener('click', handleLogin);
-        registerBtn.addEventListener('click', handleRegister);
+        // --- Profielpagina Specifieke Functies ---
+        async function handleUpdatePassword() {
+            const newPassword = newPasswordInput.value.trim();
+            const confirmPassword = confirmNewPasswordInput.value.trim();
+            profileMessage.textContent = '';
 
-        // --- Initial Call ---
+            if (!newPassword && !confirmPassword) {
+                showMessage("Voer een nieuw wachtwoord in.");
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showMessage("Wachtwoorden komen niet overeen.");
+                return;
+            }
+            if (newPassword.length < 6) {
+                showMessage("Wachtwoord moet minimaal 6 tekens lang zijn.");
+                return;
+            }
+
+            try {
+                await updatePassword(auth.currentUser, newPassword);
+                showMessage("Wachtwoord succesvol gewijzigd!", false);
+                newPasswordInput.value = '';
+                confirmNewPasswordInput.value = '';
+            } catch (error) {
+                let errorMessage = "Fout bij wijzigen wachtwoord.";
+                if (error.code === 'auth/weak-password') {
+                    errorMessage = "Het nieuwe wachtwoord is te zwak.";
+                } else if (error.code === 'auth/requires-recent-login') {
+                    errorMessage = "Voor deze actie moet je opnieuw inloggen. Log uit en weer in.";
+                }
+                showMessage(errorMessage);
+                console.error("Password update error:", error);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                // onAuthStateChanged zal doorsturen naar index.html
+            } catch (error) {
+                showMessage(`Fout bij uitloggen: ${error.message}`);
+                console.error("Logout error:", error);
+            }
+        }
+
+        // --- Event Listeners voor Profielpagina ---
+        profileBackBtn.onclick = () => {
+            window.location.href = 'home.html'; // Navigeer terug naar de hoofdapp
+        };
+
+        userNameInput.onchange = () => {
+            userName = userNameInput.value;
+            saveUserProfile();
+        };
+
+        profileDarkModeToggle.onchange = () => {
+            isDarkMode = profileDarkModeToggle.checked;
+            localStorage.setItem('isDarkMode', isDarkMode);
+            applyTheme();
+            saveUserProfile();
+        };
+
+        updatePasswordBtn.onclick = handleUpdatePassword;
+        logoutBtn.onclick = handleLogout;
+
+        // --- Initiële Setup bij Venster Laden ---
         window.onload = initializeFirebase;
     </script>
 </body>
