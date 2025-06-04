@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Franse Woordenschat App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons (for plus/trash, and profile) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Card flip effect */
+        .card-flip {
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card-flip.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Dynamic background and text colors for card front/back based on theme */
+        /* These will be overridden by JS for dynamic theming */
+        .card-front.light-mode { background-color: #ffffff; color: #333; }
+        .card-front.dark-mode { background-color: #4a5568; color: #e2e8f0; }
+        .card-back.light-mode { background-color: #edf2f7; color: #333; }
+        .card-back.dark-mode { background-color: #2d3748; color: #e2e8f0; }
+
+        /* Fade in down animation for messages */
+        @keyframes fade-in-down {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-down {
+            animation: fade-in-down 0.5s ease-out forwards;
+        }
+
+        /* Popup specific styles (for both profile and login) */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .popup-content.dark-mode {
+            background-color: #4a5568; /* bg-gray-600 */
+            color: #e2e8f0; /* text-gray-200 */
+        }
+        .popup-content .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280; /* gray-500 */
+        }
+        .popup-content.dark-mode .close-btn {
+            color: #cbd5e0; /* gray-300 */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 flex flex-col items-center p-4 transition-colors duration-300">
+
+    <h1 class="text-4xl font-bold text-blue-800 mb-6 drop-shadow-md">Franse Woordenschat</h1>
+
+    <!-- Header Buttons (Dark Mode Toggle & Profile) -->
+    <div class="absolute top-4 right-4 flex space-x-2">
+        <!-- Dark Mode Toggle -->
+        <button id="darkModeToggle" class="p-3 rounded-full shadow-lg transition-colors duration-300 bg-yellow-400 text-gray-800 hover:bg-yellow-500" aria-label="Toggle dark mode">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 4a1 1 0 011 1v1a1 1 0 11-2 0V7a1 1 0 011-1zm-4 8a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4-4a1 1 0 011 1v1a1 1 0 11-2 0V7a1 1 0 011-1zm10.293-2.293a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM5.293 4.293a1 1 0 010 1.414L4.586 6.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM14.707 14.707a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM4.293 14.707a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 8a2 2 0 100 4 2 2 0 000-4z"></path></svg>
+        </button>
+        <!-- Profile Button -->
+        <button id="profileBtn" class="p-3 rounded-full shadow-lg transition-colors duration-300 bg-blue-500 text-white hover:bg-blue-600" aria-label="Open profile settings">
+            <i class="fas fa-user"></i>
+        </button>
+    </div>
+
+    <!-- Message Display -->
+    <div id="messageDisplay" class="hidden bg-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 shadow-md animate-fade-in-down"></div>
+
+    <!-- User ID Display -->
+    <div id="userIdDisplay" class="text-sm mb-4 p-2 rounded-lg shadow-sm bg-white text-gray-600">
+        Gebruikers-ID: <span id="userIdSpan" class="font-mono text-blue-700">Laden...</span>
+    </div>
+
+    <!-- Main App Content (hidden until logged in) -->
+    <div id="mainAppContent" class="hidden w-full flex flex-col items-center">
+        <!-- Navigation Buttons -->
+        <div class="flex space-x-4 mb-8">
+            <button id="viewSetsBtn" class="px-6 py-3 rounded-full font-semibold transition-all duration-300 ease-in-out shadow-lg bg-blue-600 text-white transform scale-105">
+                Mijn Sets
+            </button>
+            <button id="createSetBtn" class="px-6 py-3 rounded-full font-semibold transition-all duration-300 ease-in-out shadow-lg bg-green-500 text-white hover:bg-green-600">
+                Nieuwe Set
+            </button>
+            <button id="addWordsBtn" class="hidden px-6 py-3 rounded-full font-semibold transition-all duration-300 ease-in-out shadow-lg bg-purple-500 text-white hover:bg-purple-600">
+                Woorden Toevoegen
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="contentArea" class="w-full max-w-2xl p-6 rounded-xl shadow-xl border bg-white border-gray-200">
+            <!-- Content will be dynamically loaded here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Login Popup -->
+    <div id="loginPopupOverlay" class="popup-overlay hidden">
+        <div id="loginPopupContent" class="popup-content">
+            <h2 class="text-2xl font-semibold mb-4">Inloggen / Registreren</h2>
+
+            <div class="mb-4">
+                <label for="loginEmailInput" class="block text-sm font-medium mb-1">E-mail:</label>
+                <input type="email" id="loginEmailInput" placeholder="jouw@email.com" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+            </div>
+
+            <div class="mb-6">
+                <label for="loginPasswordInput" class="block text-sm font-medium mb-1">Wachtwoord:</label>
+                <input type="password" id="loginPasswordInput" placeholder="Wachtwoord" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+            </div>
+
+            <div class="flex space-x-4">
+                <button id="loginBtn" class="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md">
+                    Inloggen
+                </button>
+                <button id="registerBtn" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md">
+                    Registreren
+                </button>
+            </div>
+            <p id="loginMessage" class="text-sm text-red-500 mt-4"></p>
+        </div>
+    </div>
+
+    <!-- Profile Popup -->
+    <div id="profilePopupOverlay" class="popup-overlay hidden">
+        <div id="profilePopupContent" class="popup-content">
+            <button id="profileCloseBtn" class="close-btn">&times;</button>
+            <h2 class="text-2xl font-semibold mb-4">Profiel Instellingen</h2>
+
+            <div class="mb-4">
+                <label for="userNameInput" class="block text-sm font-medium mb-1">Jouw Naam:</label>
+                <input type="text" id="userNameInput" placeholder="Voer je naam in" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 themed-input">
+            </div>
+
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-medium">Donkere Modus:</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" value="" id="profileDarkModeToggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <p class="text-sm text-gray-500 mb-6">Je gebruikers-ID: <span id="profileUserIdSpan" class="font-mono text-blue-700"></span></p>
+
+            <button id="logoutBtn" class="w-full px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md">
+                Uitloggen
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK and Application Logic -->
+    <script type="module">
+        // Import necessary Firebase functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import {
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+        // --- Global Application State Variables ---
+        let app;
+        let db;
+        let auth;
+        let currentUserId = null;
+        let isAuthReady = false; // Flag to ensure auth is complete before Firestore ops
+
+        let sets = []; // Stores all vocabulary sets for the current user
+        let selectedSet = null; // The currently selected set for learning or editing
+        let currentWordIndex = 0; // Index for the current word in learning mode
+        let showTranslation = false; // For flashcard mode: true to show Dutch, false for French
+
+        let currentMode = 'viewSets'; // 'viewSets', 'createSet', 'learnSet', 'addWords'
+        let learnSubMode = 'flashcards'; // 'flashcards', 'quiz'
+        let quizStrictness = 'loose'; // 'strict' (exact match) or 'loose' (ignore case/accents)
+
+        let isDarkMode = false; // Theme state
+        let userName = 'Gast'; // Default user name
+
+        // --- DOM Elements ---
+        const messageDisplay = document.getElementById('messageDisplay');
+        const userIdSpan = document.getElementById('userIdSpan');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const profileBtn = document.getElementById('profileBtn');
+        const body = document.body;
+        const mainAppContent = document.getElementById('mainAppContent'); // New: main app container
+        const contentArea = document.getElementById('contentArea');
+        const viewSetsBtn = document.getElementById('viewSetsBtn');
+        const createSetBtn = document.getElementById('createSetBtn');
+        const addWordsBtn = document.getElementById('addWordsBtn');
+
+        // Login Popup DOM elements
+        const loginPopupOverlay = document.getElementById('loginPopupOverlay');
+        const loginPopupContent = document.getElementById('loginPopupContent');
+        const loginEmailInput = document.getElementById('loginEmailInput');
+        const loginPasswordInput = document.getElementById('loginPasswordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const loginMessage = document.getElementById('loginMessage');
+
+        // Profile Popup DOM elements
+        const profilePopupOverlay = document.getElementById('profilePopupOverlay');
+        const profilePopupContent = document.getElementById('profilePopupContent');
+        const profileCloseBtn = document.getElementById('profileCloseBtn');
+        const userNameInput = document.getElementById('userNameInput');
+        const profileDarkModeToggle = document.getElementById('profileDarkModeToggle');
+        const profileUserIdSpan = document.getElementById('profileUserIdSpan');
+        const logoutBtn = document.getElementById('logoutBtn'); // New logout button
+
+        let messageTimeout = null; // Timeout for message display
+
+        // --- Helper Functions ---
+
+        /**
+         * Displays a temporary message to the user.
+         * @param {string} msg - The message to display.
+         */
+        function showMessage(msg) {
+            messageDisplay.textContent = msg;
+            messageDisplay.classList.remove('hidden');
+            messageDisplay.classList.add('animate-fade-in-down');
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+            }
+            messageTimeout = setTimeout(() => {
+                messageDisplay.classList.add('hidden');
+                messageDisplay.classList.remove('animate-fade-in-down');
+            }, 3000); // Message disappears after 3 seconds
+        }
+
+        /**
+         * Normalizes a string for comparison by removing accents, converting to lowercase, and trimming whitespace.
+         * Used for 'loose' quiz strictness.
+         * @param {string} str - The input string.
+         * @returns {string} The normalized string.
+         */
+        function normalizeString(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
+        /**
+         * Applies the current theme (light/dark) to various UI elements.
+         * This function is called whenever the theme changes or new content is rendered.
+         */
+        function applyTheme() {
+            // Update body background and text color
+            if (isDarkMode) {
+                body.classList.remove('from-blue-100', 'to-purple-100', 'text-gray-800');
+                body.classList.add('from-gray-800', 'to-gray-900', 'text-gray-100');
+                darkModeToggle.classList.remove('bg-yellow-400', 'text-gray-800', 'hover:bg-yellow-500');
+                darkModeToggle.classList.add('bg-gray-600', 'text-yellow-300', 'hover:bg-gray-500');
+                darkModeToggle.innerHTML = '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>';
+            } else {
+                body.classList.remove('from-gray-800', 'to-gray-900', 'text-gray-100');
+                body.classList.add('from-blue-100', 'to-purple-100', 'text-gray-800');
+                darkModeToggle.classList.remove('bg-gray-600', 'text-yellow-300', 'hover:bg-gray-500');
+                darkModeToggle.classList.add('bg-yellow-400', 'text-gray-800', 'hover:bg-yellow-500');
+                darkModeToggle.innerHTML = '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 4a1 1 0 011 1v1a1 1 0 11-2 0V7a1 1 0 011-1zm-4 8a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4-4a1 1 0 011 1v1a1 1 0 11-2 0V7a1 1 0 011-1zm10.293-2.293a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM5.293 4.293a1 1 0 010 1.414L4.586 6.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM14.707 14.707a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM4.293 14.707a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 8a2 2 0 100 4 2 2 0 000-4z"></path></svg>';
+            }
+
+            // Update panel (container) background and border
+            const panels = document.querySelectorAll('.panel');
+            panels.forEach(panel => {
+                if (isDarkMode) {
+                    panel.classList.remove('bg-white', 'border-gray-200');
+                    panel.classList.add('bg-gray-700', 'border-gray-600');
+                } else {
+                    panel.classList.remove('bg-gray-700', 'border-gray-600');
+                    panel.classList.add('bg-white', 'border-gray-200');
+                }
+            });
+
+            // Update input field styles
+            const inputs = document.querySelectorAll('.themed-input');
+            inputs.forEach(input => {
+                if (isDarkMode) {
+                    input.classList.remove('border-gray-300', 'focus:ring-blue-500', 'focus:border-blue-500', 'bg-white', 'text-gray-800');
+                    input.classList.add('border-gray-500', 'focus:ring-blue-400', 'focus:border-blue-400', 'bg-gray-800', 'text-gray-100');
+                } else {
+                    input.classList.remove('border-gray-500', 'focus:ring-blue-400', 'focus:border-blue-400', 'bg-gray-800', 'text-gray-100');
+                    input.classList.add('border-gray-300', 'focus:ring-blue-500', 'focus:border-blue-500', 'bg-white', 'text-gray-800');
+                }
+            });
+
+            // Update list item styles
+            const listItems = document.querySelectorAll('.themed-list-item');
+            listItems.forEach(item => {
+                if (isDarkMode) {
+                    item.classList.remove('bg-gray-50', 'hover:bg-gray-100', 'text-gray-800');
+                    item.classList.add('bg-gray-600', 'hover:bg-gray-500', 'text-gray-100');
+                } else {
+                    item.classList.remove('bg-gray-600', 'hover:bg-gray-500', 'text-gray-100');
+                    item.classList.add('bg-gray-50', 'hover:bg-gray-100', 'text-gray-800');
+                }
+            });
+
+            // Update sub-panel styles (e.g., quiz strictness box)
+            const subPanels = document.querySelectorAll('.themed-sub-panel');
+            subPanels.forEach(panel => {
+                if (isDarkMode) {
+                    panel.classList.remove('bg-gray-100', 'text-gray-700');
+                    panel.classList.add('bg-gray-600', 'text-gray-200');
+                } else {
+                    panel.classList.remove('bg-gray-600', 'text-gray-200');
+                    panel.classList.add('bg-gray-100', 'text-gray-700');
+                }
+            });
+
+            // Update user ID display panel
+            const userIdPanel = document.getElementById('userIdDisplay');
+            if (isDarkMode) {
+                userIdPanel.classList.remove('bg-white', 'text-gray-600');
+                userIdPanel.classList.add('bg-gray-600', 'text-gray-200');
+            } else {
+                userIdPanel.classList.remove('bg-gray-600', 'text-gray-200');
+                userIdPanel.classList.add('bg-white', 'text-gray-600');
+            }
+
+            // Update card front/back colors dynamically
+            const cardFronts = document.querySelectorAll('.card-front');
+            const cardBacks = document.querySelectorAll('.card-back');
+            cardFronts.forEach(card => {
+                card.classList.remove('light-mode', 'dark-mode');
+                card.classList.add(isDarkMode ? 'dark-mode' : 'light-mode');
+            });
+            cardBacks.forEach(card => {
+                card.classList.remove('light-mode', 'dark-mode');
+                card.classList.add(isDarkMode ? 'dark-mode' : 'light-mode');
+            });
+
+            // Update profile popup content theme
+            if (profilePopupContent) {
+                if (isDarkMode) {
+                    profilePopupContent.classList.add('dark-mode');
+                    profilePopupContent.classList.remove('light-mode');
+                } else {
+                    profilePopupContent.classList.remove('dark-mode');
+                    profilePopupContent.classList.add('light-mode');
+                }
+            }
+
+            // Update login popup content theme
+            if (loginPopupContent) {
+                if (isDarkMode) {
+                    loginPopupContent.classList.add('dark-mode');
+                    loginPopupContent.classList.remove('light-mode');
+                } else {
+                    loginPopupContent.classList.remove('dark-mode');
+                    loginPopupContent.classList.add('light-mode');
+                }
+            }
+        }
+
+        // --- Firebase Initialization ---
+
+        /**
+         * Initializes Firebase app, authentication, and Firestore.
+         * Sets up the authentication state listener.
+         */
+        async function initializeFirebase() {
+            try {
+                // Use Canvas-provided Firebase config or fallback to a default (for local testing)
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
+                    "apiKey": "AIzaSyB59BVbioUciigC0l47T1tQAsF_kPs2Frs",
+                    "authDomain": "leer-app.firebaseapp.com",
+                    "projectId": "leer-app",
+                    "storageBucket": "leer-app.firebasestorage.app",
+                    "messagingSenderId": "1029710103221",
+                    "appId": "1:1029710103221:web:386173aefbed03015574fc"
+                }`);
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Listen for authentication state changes
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUserId = user.uid;
+                        userIdSpan.textContent = currentUserId;
+                        profileUserIdSpan.textContent = currentUserId; // Update user ID in profile popup
+                        isAuthReady = true;
+                        await loadUserProfile(); // Load user profile (name, dark mode preference)
+                        setupSetsListener(); // Start listening for sets once authenticated
+                        mainAppContent.classList.remove('hidden'); // Show main app content
+                        loginPopupOverlay.classList.add('hidden'); // Hide login popup
+                        setMode('viewSets'); // Go to default view
+                    } else {
+                        // User is signed out or not authenticated
+                        currentUserId = null;
+                        isAuthReady = false;
+                        userIdSpan.textContent = 'Niet ingelogd';
+                        profileUserIdSpan.textContent = 'Niet ingelogd';
+                        mainAppContent.classList.add('hidden'); // Hide main app content
+                        loginPopupOverlay.classList.remove('hidden'); // Show login popup
+                        showMessage("Log in om de app te gebruiken.");
+                    }
+                });
+            } catch (error) {
+                showMessage(`Fout bij initialiseren Firebase: ${error.message}`);
+                console.error("Error initializing Firebase:", error);
+            }
+        }
+
+        // --- User Profile Management (Firestore) ---
+
+        /**
+         * Loads the user's profile settings (name, dark mode preference) from Firestore.
+         * If no profile exists, initializes with default values.
+         */
+        async function loadUserProfile() {
+            if (!db || !currentUserId) return;
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const userProfileDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/userProfile`, 'settings');
+
+            try {
+                const docSnap = await getDoc(userProfileDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    userName = data.name || 'Gast';
+                    isDarkMode = data.isDarkMode || false;
+                    // Update UI elements based on loaded profile
+                    userNameInput.value = userName;
+                    profileDarkModeToggle.checked = isDarkMode;
+                    applyTheme(); // Apply theme based on loaded preference
+                } else {
+                    // If no profile exists, create one with default values
+                    await setDoc(userProfileDocRef, {
+                        name: userName,
+                        isDarkMode: isDarkMode
+                    });
+                }
+            } catch (error) {
+                showMessage(`Fout bij laden profiel: ${error.message}`);
+                console.error("Error loading user profile:", error);
+            }
+        }
+
+        /**
+         * Saves the user's profile settings to Firestore.
+         */
+        async function saveUserProfile() {
+            if (!db || !currentUserId) return;
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const userProfileDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/userProfile`, 'settings');
+
+            try {
+                await updateDoc(userProfileDocRef, {
+                    name: userName,
+                    isDarkMode: isDarkMode
+                });
+                showMessage("Profiel opgeslagen!");
+            } catch (error) {
+                showMessage(`Fout bij opslaan profiel: ${error.message}`);
+                console.error("Error saving user profile:", error);
+            }
+        }
+
+        // --- Data Management (Firestore for Sets) ---
+
+        let unsubscribeSets = null; // Holds the unsubscribe function for the Firestore listener
+
+        /**
+         * Sets up a real-time listener for the user's vocabulary sets in Firestore.
+         * Updates the global 'sets' array and re-renders the UI when data changes.
+         */
+        function setupSetsListener() {
+            if (db && currentUserId && isAuthReady) {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const userSetsCollectionRef = collection(db, `artifacts/${appId}/users/${currentUserId}/sets`);
+
+                // Unsubscribe from previous listener if it exists to prevent memory leaks
+                if (unsubscribeSets) {
+                    unsubscribeSets();
+                }
+
+                unsubscribeSets = onSnapshot(userSetsCollectionRef, (snapshot) => {
+                    sets = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    // Sort sets alphabetically by title
+                    sets.sort((a, b) => a.title.localeCompare(b.title));
+
+                    // Re-render the current view to reflect changes
+                    if (currentMode === 'viewSets') {
+                        renderViewSets();
+                    } else if (currentMode === 'addWords' && selectedSet) {
+                        // Find the updated selected set in the 'sets' array
+                        selectedSet = sets.find(s => s.id === selectedSet.id) || null;
+                        if (selectedSet) {
+                            renderAddWords();
+                        } else {
+                            // If the selected set was deleted, go back to view sets
+                            setMode('viewSets');
+                        }
+                    } else if (currentMode === 'learnSet' && selectedSet) {
+                        selectedSet = sets.find(s => s.id === selectedSet.id) || null;
+                        if (!selectedSet || !selectedSet.words || selectedSet.words.length === 0) {
+                            // If set deleted or empty, go back to view sets
+                            setMode('viewSets');
+                        } else {
+                            // Re-render to update word count or current word if needed
+                            renderLearnSet();
+                        }
+                    }
+                }, (error) => {
+                    showMessage(`Fout bij ophalen sets: ${error.message}`);
+                    console.error("Error fetching sets:", error);
+                });
+            }
+        }
+
+        /**
+         * Creates a new vocabulary set in Firestore.
+         * @param {string} setName - The title of the new set.
+         */
+        async function createNewSet(setName) {
+            if (!setName.trim()) {
+                showMessage("Setnaam mag niet leeg zijn.");
+                return;
+            }
+            if (!db || !currentUserId) {
+                showMessage("Authenticatie niet voltooid. Probeer opnieuw.");
+                return;
+            }
+
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const userSetsCollectionRef = collection(db, `artifacts/${appId}/users/${currentUserId}/sets`);
+                await addDoc(userSetsCollectionRef, {
+                    title: setName.trim(),
+                    words: [] // Initialize with an empty array of words
+                });
+                showMessage("Set succesvol aangemaakt!");
+                setMode('viewSets'); // Go back to viewing sets
+            } catch (error) {
+                showMessage(`Fout bij aanmaken set: ${error.message}`);
+                console.error("Error creating set:", error);
+            }
+        }
+
+        /**
+         * Adds a new word to the currently selected set in Firestore.
+         * @param {string} frenchWord - The French word.
+         * @param {string} dutchTranslation - The Dutch translation.
+         */
+        async function addWordToSet(frenchWord, dutchTranslation) {
+            if (!frenchWord.trim() || !dutchTranslation.trim()) {
+                showMessage("Beide velden (Frans en Nederlands) moeten ingevuld zijn.");
+                return;
+            }
+            if (!db || !currentUserId || !selectedSet) {
+                showMessage("Geen set geselecteerd of authenticatie niet voltooid.");
+                return;
+            }
+
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const setDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/sets`, selectedSet.id);
+
+                const newWord = {
+                    french: frenchWord.trim(),
+                    dutch: dutchTranslation.trim()
+                };
+
+                const updatedWords = [...(selectedSet.words || []), newWord];
+                await updateDoc(setDocRef, { words: updatedWords });
+
+                // Firestore listener will automatically update 'sets' and trigger re-render
+                showMessage("Woord succesvol toegevoegd!");
+            } catch (error) {
+                showMessage(`Fout bij toevoegen woord: ${error.message}`);
+                console.error("Error adding word:", error);
+            }
+        }
+
+        /**
+         * Deletes a word from the currently selected set in Firestore.
+         * @param {object} wordToDelete - The word object to delete (must match French and Dutch).
+         */
+        async function deleteWordFromSet(wordToDelete) {
+            if (!db || !currentUserId || !selectedSet) {
+                showMessage("Geen set geselecteerd of authenticatie niet voltooid.");
+                return;
+            }
+
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const setDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/sets`, selectedSet.id);
+
+                const updatedWords = (selectedSet.words || []).filter(
+                    word => word.french !== wordToDelete.french || word.dutch !== wordToDelete.dutch
+                );
+
+                await updateDoc(setDocRef, { words: updatedWords });
+                // Firestore listener will automatically update 'sets' and trigger re-render
+                showMessage("Woord succesvol verwijderd!");
+            } catch (error) {
+                showMessage(`Fout bij verwijderen woord: ${error.message}`);
+                console.error("Error deleting word:", error);
+            }
+        }
+
+        /**
+         * Deletes a vocabulary set from Firestore.
+         * @param {string} setId - The ID of the set to delete.
+         */
+        async function deleteVocabularySet(setId) {
+            if (!db || !currentUserId) {
+                showMessage("Authenticatie niet voltooid.");
+                return;
+            }
+
+            // Use window.confirm for confirmation (as per instructions, no custom modal needed for HTML/JS)
+            if (!window.confirm("Weet je zeker dat je deze set wilt verwijderen?")) {
+                return;
+            }
+
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const setDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/sets`, setId);
+                await deleteDoc(setDocRef);
+                showMessage("Set succesvol verwijderd!");
+                if (selectedSet && selectedSet.id === setId) {
+                    selectedSet = null; // Clear selected set if it was deleted
+                    setMode('viewSets'); // Go back to viewing sets
+                }
+            } catch (error) {
+                showMessage(`Fout bij verwijderen set: ${error.message}`);
+                console.error("Error deleting set:", error);
+            }
+        }
+
+        // --- UI Rendering Functions ---
+
+        /**
+         * Sets the current mode of the application and triggers the corresponding UI render.
+         * @param {string} newMode - The new mode ('viewSets', 'createSet', 'learnSet', 'addWords').
+         */
+        function setMode(newMode) {
+            currentMode = newMode; // Update global mode state
+            contentArea.dataset.mode = newMode; // Store mode on contentArea for theme application
+
+            // Update navigation button styles
+            viewSetsBtn.classList.remove('bg-blue-600', 'transform', 'scale-105');
+            viewSetsBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            createSetBtn.classList.remove('bg-green-600', 'transform', 'scale-105');
+            createSetBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+            addWordsBtn.classList.add('hidden'); // Hide by default, will be shown if selectedSet exists
+
+            if (selectedSet) {
+                addWordsBtn.classList.remove('hidden');
+                addWordsBtn.textContent = `Woorden Toevoegen aan "${selectedSet.title}"`;
+                if (newMode === 'addWords') {
+                    addWordsBtn.classList.add('bg-purple-600', 'transform', 'scale-105');
+                    addWordsBtn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                } else {
+                    addWordsBtn.classList.remove('bg-purple-600', 'transform', 'scale-105');
+                    addWordsBtn.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                }
+            }
+
+            // Call the appropriate render function based on the new mode
+            if (newMode === 'viewSets') {
+                viewSetsBtn.classList.add('bg-blue-600', 'transform', 'scale-105');
+                viewSetsBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                renderViewSets();
+            } else if (newMode === 'createSet') {
+                createSetBtn.classList.add('bg-green-600', 'transform', 'scale-105');
+                createSetBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                renderCreateSet();
+            } else if (newMode === 'learnSet' && selectedSet) {
+                renderLearnSet();
+            } else if (newMode === 'addWords' && selectedSet) {
+                renderAddWords();
+            }
+            applyTheme(); // Re-apply theme to new content
+        }
+
+        /**
+         * Renders the 'View Sets' screen, displaying all available vocabulary sets.
+         */
+        function renderViewSets() {
+            selectedSet = null; // Clear selected set when viewing all sets
+            addWordsBtn.classList.add('hidden'); // Hide add words button
+            contentArea.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-700'}">Jouw Woordenschat Sets</h2>
+                <div id="setsList" class="space-y-3"></div>
+            `;
+            const setsList = document.getElementById('setsList');
+
+            if (sets.length === 0) {
+                setsList.innerHTML = `<p class="${isDarkMode ? 'text-gray-300' : 'text-gray-500'}">Nog geen sets aangemaakt. Maak er een aan om te beginnen!</p>`;
+            } else {
+                sets.forEach(set => {
+                    const listItem = document.createElement('li');
+                    listItem.className = `flex items-center justify-between p-4 rounded-lg shadow-sm transition-colors duration-200 themed-list-item`;
+                    listItem.innerHTML = `
+                        <span class="text-lg font-medium">${set.title} (${set.words?.length || 0} woorden)</span>
+                        <div class="flex space-x-2">
+                            <button data-set-id="${set.id}" class="select-set-btn px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors duration-200 shadow-md">
+                                Leren
+                            </button>
+                            <button data-set-id="${set.id}" class="add-words-to-set-btn px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200 shadow-md">
+                                <i class="fas fa-plus"></i> Woorden
+                            </button>
+                            <button data-set-id="${set.id}" class="delete-set-btn px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200 shadow-md">
+                                <i class="fas fa-trash"></i> Verwijderen
+                            </button>
+                        </div>
+                    `;
+                    setsList.appendChild(listItem);
+                });
+
+                // Attach event listeners to dynamically created buttons
+                document.querySelectorAll('.select-set-btn').forEach(button => {
+                    button.onclick = (e) => {
+                        const setId = e.target.dataset.setId;
+                        selectedSet = sets.find(s => s.id === setId);
+                        currentWordIndex = 0;
+                        showTranslation = false;
+                        learnSubMode = 'flashcards'; // Reset learning sub-mode
+                        setMode('learnSet');
+                    };
+                });
+                document.querySelectorAll('.add-words-to-set-btn').forEach(button => {
+                    button.onclick = (e) => {
+                        const setId = e.target.dataset.setId;
+                        selectedSet = sets.find(s => s.id === setId);
+                        setMode('addWords');
+                    };
+                });
+                document.querySelectorAll('.delete-set-btn').forEach(button => {
+                    button.onclick = (e) => {
+                        const setId = e.target.dataset.setId;
+                        deleteVocabularySet(setId);
+                    };
+                });
+            }
+            contentArea.classList.add('panel'); // Add panel class for theme application
+            applyTheme(); // Apply theme to new content
+        }
+
+        /**
+         * Renders the 'Create New Set' screen.
+         */
+        function renderCreateSet() {
+            contentArea.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-700'}">Nieuwe Set Aanmaken</h2>
+                <input type="text" id="newSetNameInput" placeholder="Naam van de set (bijv. 'Reiswoorden')" class="w-full p-3 rounded-lg mb-4 themed-input">
+                <button id="createSetSubmitBtn" class="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md">
+                    Set Aanmaken
+                </button>
+            `;
+            const newSetNameInput = document.getElementById('newSetNameInput');
+            newSetNameInput.value = ''; // Clear previous input
+            document.getElementById('createSetSubmitBtn').onclick = () => {
+                createNewSet(newSetNameInput.value);
+            };
+            contentArea.classList.add('panel'); // Add panel class for theme application
+            applyTheme(); // Apply theme to new content
+        }
+
+        /**
+         * Renders the 'Learn Set' screen, including flashcards or quiz.
+         */
+        function renderLearnSet() {
+            if (!selectedSet || !selectedSet.words || selectedSet.words.length === 0) {
+                contentArea.innerHTML = `
+                    <p class="${isDarkMode ? 'text-gray-300' : 'text-gray-500'}">Deze set bevat nog geen woorden. Voeg woorden toe!</p>
+                    <button id="backToSetsBtn" class="mt-6 px-6 py-3 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md">
+                        Terug naar Sets
+                    </button>`;
+                document.getElementById('backToSetsBtn').onclick = () => setMode('viewSets');
+                contentArea.classList.add('panel');
+                applyTheme();
+                return;
+            }
+
+            const currentWord = selectedSet.words[currentWordIndex];
+
+            contentArea.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-700'}">Leren: ${selectedSet.title}</h2>
+                <div class="flex space-x-4 mb-6">
+                    <button id="flashcardsModeBtn" class="px-4 py-2 rounded-full font-semibold transition-all duration-300 ease-in-out shadow-md"></button>
+                    <button id="quizModeBtn" class="px-4 py-2 rounded-full font-semibold transition-all duration-300 ease-in-out shadow-md"></button>
+                </div>
+                <div id="learnContent" class="w-full flex flex-col items-center"></div>
+                <div class="text-gray-600 mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}">
+                    Woord ${currentWordIndex + 1} van ${selectedSet.words.length}
+                </div>
+                <div class="flex space-x-4">
+                    <button id="prevWordBtn" class="px-6 py-3 rounded-full font-semibold transition-colors duration-200 shadow-md ${isDarkMode ? 'bg-gray-500 text-gray-100 hover:bg-gray-400' : 'bg-gray-300 text-gray-800 hover:bg-gray-400'}">
+                        Vorige
+                    </button>
+                    <button id="nextWordBtn" class="px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md">
+                        Volgende
+                    </button>
+                </div>
+                <button id="backToSetsBtn" class="mt-6 px-6 py-3 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md">
+                    Terug naar Sets
+                </button>
+            `;
+
+            const flashcardsModeBtn = document.getElementById('flashcardsModeBtn');
+            const quizModeBtn = document.getElementById('quizModeBtn');
+            const learnContent = document.getElementById('learnContent');
+            const prevWordBtn = document.getElementById('prevWordBtn');
+            const nextWordBtn = document.getElementById('nextWordBtn');
+            const backToSetsBtn = document.getElementById('backToSetsBtn');
+
+            flashcardsModeBtn.textContent = 'Flashcards';
+            quizModeBtn.textContent = 'Quiz';
+
+            /**
+             * Updates the styling of the learning sub-mode buttons.
+             */
+            function updateLearnSubModeButtons() {
+                flashcardsModeBtn.className = `px-4 py-2 rounded-full font-semibold transition-all duration-300 ease-in-out shadow-md ${learnSubMode === 'flashcards' ? 'bg-indigo-600 text-white' : 'bg-indigo-400 text-white hover:bg-indigo-500'}`;
+                quizModeBtn.className = `px-4 py-2 rounded-full font-semibold transition-all duration-300 ease-in-out shadow-md ${learnSubMode === 'quiz' ? 'bg-indigo-600 text-white' : 'bg-indigo-400 text-white hover:bg-indigo-500'}`;
+            }
+
+            /**
+             * Renders the content specific to the selected learning sub-mode (flashcard or quiz).
+             */
+            function renderLearnContent() {
+                if (learnSubMode === 'flashcards') {
+                    learnContent.innerHTML = `
+                        <div id="cardFlipContainer" class="card-flip w-full h-64 mb-6 cursor-pointer ${showTranslation ? 'flipped' : ''}">
+                            <div class="card-inner">
+                                <div class="card-front ${isDarkMode ? 'dark-mode' : 'light-mode'}">
+                                    <span class="text-3xl font-bold text-blue-700">${currentWord.french}</span>
+                                </div>
+                                <div class="card-back ${isDarkMode ? 'dark-mode' : 'light-mode'}">
+                                    <span class="text-3xl font-bold text-purple-700">${currentWord.dutch}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('cardFlipContainer').onclick = () => {
+                        showTranslation = !showTranslation;
+                        renderLearnContent(); // Re-render to apply flip
+                    };
+                } else if (learnSubMode === 'quiz') {
+                    learnContent.innerHTML = `
+                        <div class="w-full p-6 rounded-xl shadow-xl border mb-6 text-center panel">
+                            <span class="text-3xl font-bold text-blue-700">${currentWord.french}</span>
+                        </div>
+                        <input type="text" id="quizAnswerInput" placeholder="Jouw vertaling in het Nederlands" class="w-full p-3 rounded-lg mb-4 text-center themed-input">
+                        <button id="checkAnswerBtn" class="px-6 py-3 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md mb-4">
+                            Controleer Antwoord
+                        </button>
+                        <p id="quizFeedback" class="font-semibold text-lg animate-fade-in-down"></p>
+                        <div class="mt-4 p-4 rounded-lg shadow-inner themed-sub-panel">
+                            <h4 class="font-semibold mb-2">Quiz Strengheid:</h4>
+                            <div class="flex space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" class="form-radio text-blue-600" name="quizStrictness" value="loose" ${quizStrictness === 'loose' ? 'checked' : ''}>
+                                    <span class="ml-2">Losjes (negeer hoofdletters/accenten)</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" class="form-radio text-blue-600" name="quizStrictness" value="strict" ${quizStrictness === 'strict' ? 'checked' : ''}>
+                                    <span class="ml-2">Streng (exacte match)</span>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                    const quizAnswerInput = document.getElementById('quizAnswerInput');
+                    const checkAnswerBtn = document.getElementById('checkAnswerBtn');
+                    const quizFeedbackEl = document.getElementById('quizFeedback');
+
+                    quizAnswerInput.value = ''; // Clear input on render
+                    quizFeedbackEl.textContent = ''; // Clear feedback
+
+                    checkAnswerBtn.onclick = () => {
+                        const userAnswer = quizAnswerInput.value;
+                        const correctTranslation = currentWord.dutch;
+                        let isCorrect = false;
+
+                        if (quizStrictness === 'strict') {
+                            isCorrect = (userAnswer === correctTranslation);
+                        } else { // 'loose'
+                            isCorrect = (normalizeString(userAnswer) === normalizeString(correctTranslation));
+                        }
+
+                        if (isCorrect) {
+                            quizFeedbackEl.textContent = "Correct!";
+                            quizFeedbackEl.classList.remove('text-red-500');
+                            quizFeedbackEl.classList.add('text-green-500');
+                            showMessage("Correct!");
+                        } else {
+                            quizFeedbackEl.textContent = `Onjuist. Het juiste antwoord is: ${correctTranslation}`;
+                            quizFeedbackEl.classList.remove('text-green-500');
+                            quizFeedbackEl.classList.add('text-red-500');
+                            showMessage("Onjuist.");
+                        }
+                    };
+
+                    document.querySelectorAll('input[name="quizStrictness"]').forEach(radio => {
+                        radio.onchange = (e) => {
+                            quizStrictness = e.target.value;
+                            showMessage(`Quiz strengheid ingesteld op: ${quizStrictness === 'loose' ? 'Losjes' : 'Streng'}`);
+                        };
+                    });
+                }
+                applyTheme(); // Apply theme to newly rendered content
+            }
+
+            // Initial setup for learning mode buttons and content
+            updateLearnSubModeButtons();
+            renderLearnContent();
+
+            // Event listeners for mode switching within learn screen
+            flashcardsModeBtn.onclick = () => {
+                learnSubMode = 'flashcards';
+                currentWordIndex = 0; // Reset word index when changing mode
+                showTranslation = false;
+                updateLearnSubModeButtons();
+                renderLearnContent();
+            };
+            quizModeBtn.onclick = () => {
+                learnSubMode = 'quiz';
+                currentWordIndex = 0; // Reset word index when changing mode
+                showTranslation = false;
+                updateLearnSubModeButtons();
+                renderLearnContent();
+            };
+
+            // Event listeners for word navigation
+            prevWordBtn.onclick = () => {
+                currentWordIndex = (currentWordIndex - 1 + selectedSet.words.length) % selectedSet.words.length;
+                showTranslation = false;
+                renderLearnContent();
+            };
+            nextWordBtn.onclick = () => {
+                currentWordIndex = (currentWordIndex + 1) % selectedSet.words.length;
+                showTranslation = false;
+                renderLearnContent();
+            };
+            backToSetsBtn.onclick = () => setMode('viewSets');
+            contentArea.classList.add('panel'); // Add panel class for theme application
+            applyTheme(); // Apply theme to new content
+        }
+
+        /**
+         * Renders the 'Add Words' screen for the currently selected set.
+         */
+        function renderAddWords() {
+            if (!selectedSet) {
+                showMessage("Geen set geselecteerd.");
+                setMode('viewSets');
+                return;
+            }
+
+            contentArea.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-700'}">Woorden Toevoegen aan: ${selectedSet.title}</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <input type="text" id="newFrenchWordInput" placeholder="Frans woord" class="p-3 rounded-lg themed-input">
+                    <input type="text" id="newDutchTranslationInput" placeholder="Nederlandse vertaling" class="p-3 rounded-lg themed-input">
+                </div>
+                <button id="addWordSubmitBtn" class="w-full bg-purple-500 text-white py-3 rounded-lg font-semibold hover:bg-purple-600 transition-colors duration-200 shadow-md mb-6">
+                    Woord Toevoegen
+                </button>
+
+                <h3 class="text-xl font-semibold mb-3 ${isDarkMode ? 'text-gray-100' : 'text-gray-700'}">Huidige woorden in deze set:</h3>
+                <ul id="wordsList" class="space-y-2 max-h-60 overflow-y-auto pr-2"></ul>
+                <button id="backToSetsFromAddWordsBtn" class="mt-6 px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md">
+                    Terug naar Sets
+                </button>
+            `;
+
+            const newFrenchWordInput = document.getElementById('newFrenchWordInput');
+            const newDutchTranslationInput = document.getElementById('newDutchTranslationInput');
+            const addWordSubmitBtn = document.getElementById('addWordSubmitBtn');
+            const wordsList = document.getElementById('wordsList');
+            const backToSetsFromAddWordsBtn = document.getElementById('backToSetsFromAddWordsBtn');
+
+            addWordSubmitBtn.onclick = () => {
+                addWordToSet(newFrenchWordInput.value, newDutchTranslationInput.value);
+                newFrenchWordInput.value = ''; // Clear input fields after adding
+                newDutchTranslationInput.value = '';
+            };
+
+            if (selectedSet.words && selectedSet.words.length > 0) {
+                selectedSet.words.forEach((word, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.className = `flex items-center justify-between p-3 rounded-lg shadow-sm themed-list-item`;
+                    listItem.innerHTML = `
+                        <span>
+                            <span class="font-medium text-blue-700">${word.french}</span> - ${word.dutch}
+                        </span>
+                        <button data-french="${word.french}" data-dutch="${word.dutch}" class="delete-word-btn px-3 py-1 bg-red-400 text-white text-sm rounded-md hover:bg-red-500 transition-colors duration-200">
+                            Verwijder
+                        </button>
+                    `;
+                    wordsList.appendChild(listItem);
+                });
+
+                document.querySelectorAll('.delete-word-btn').forEach(button => {
+                    button.onclick = (e) => {
+                        const french = e.target.dataset.french;
+                        const dutch = e.target.dataset.dutch;
+                        deleteWordFromSet({ french, dutch });
+                    };
+                });
+            } else {
+                wordsList.innerHTML = `<p class="${isDarkMode ? 'text-gray-300' : 'text-gray-500'}">Deze set bevat nog geen woorden.</p>`;
+            }
+
+            backToSetsFromAddWordsBtn.onclick = () => setMode('viewSets');
+            contentArea.classList.add('panel'); // Add panel class for theme application
+            applyTheme(); // Apply theme to new content
+        }
+
+        // --- Login Popup Functions ---
+
+        /**
+         * Handles user login with email and password.
+         */
+        async function handleLogin() {
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            loginMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                loginMessage.textContent = "Vul zowel e-mail als wachtwoord in.";
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged will handle UI update on successful login
+            } catch (error) {
+                let errorMessage = "Inloggen mislukt.";
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage = "Onjuiste e-mail of wachtwoord.";
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = "Ongeldig e-mailadres.";
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = "Te veel mislukte inlogpogingen. Probeer later opnieuw.";
+                }
+                loginMessage.textContent = errorMessage;
+                console.error("Login error:", error);
+            }
+        }
+
+        /**
+         * Handles new user registration with email and password.
+         */
+        async function handleRegister() {
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            loginMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                loginMessage.textContent = "Vul zowel e-mail als wachtwoord in.";
+                return;
+            }
+            if (password.length < 6) {
+                loginMessage.textContent = "Wachtwoord moet minimaal 6 tekens lang zijn.";
+                return;
+            }
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged will handle UI update on successful registration
+            } catch (error) {
+                let errorMessage = "Registratie mislukt.";
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = "Dit e-mailadres is al in gebruik.";
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = "Wachtwoord is te zwak.";
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = "Ongeldig e-mailadres.";
+                }
+                loginMessage.textContent = errorMessage;
+                console.error("Registration error:", error);
+            }
+        }
+
+        // --- Profile Popup Functions ---
+        function openProfilePopup() {
+            profilePopupOverlay.classList.remove('hidden');
+            userNameInput.value = userName; // Set input value to current userName
+            profileDarkModeToggle.checked = isDarkMode; // Set toggle state
+            applyTheme(); // Ensure popup is themed correctly on open
+        }
+
+        function closeProfilePopup() {
+            profilePopupOverlay.classList.add('hidden');
+            // Save profile when closing, in case changes were made
+            saveUserProfile();
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                // onAuthStateChanged will handle UI update on successful logout
+                showMessage("Succesvol uitgelogd.");
+            } catch (error) {
+                showMessage(`Fout bij uitloggen: ${error.message}`);
+                console.error("Logout error:", error);
+            }
+        }
+
+        // --- Event Listeners for Main Navigation ---
+        viewSetsBtn.onclick = () => setMode('viewSets');
+        createSetBtn.onclick = () => setMode('createSet');
+        addWordsBtn.onclick = () => setMode('addWords'); // This button is hidden/shown by setMode function
+
+        // Event listener for Dark Mode Toggle (main button)
+        darkModeToggle.onclick = () => {
+            isDarkMode = !isDarkMode;
+            profileDarkModeToggle.checked = isDarkMode; // Sync popup toggle
+            applyTheme(); // Apply theme immediately
+            saveUserProfile(); // Save theme preference
+        };
+
+        // Event listener for Profile Button
+        profileBtn.onclick = openProfilePopup;
+
+        // Event listeners for Login Popup
+        loginBtn.onclick = handleLogin;
+        registerBtn.onclick = handleRegister;
+        // Close login popup if clicking outside (only if not authenticated)
+        loginPopupOverlay.onclick = (e) => {
+            if (e.target === loginPopupOverlay && !currentUserId) {
+                // Do not allow closing if not logged in
+                // loginPopupOverlay.classList.add('hidden');
+            }
+        };
+
+        // Event listeners for Profile Popup
+        profileCloseBtn.onclick = closeProfilePopup;
+        profilePopupOverlay.onclick = (e) => { // Close when clicking outside content
+            if (e.target === profilePopupOverlay) {
+                closeProfilePopup();
+            }
+        };
+        logoutBtn.onclick = handleLogout; // Attach logout function to button
+
+        userNameInput.onchange = () => { // Save name when input changes
+            userName = userNameInput.value;
+            saveUserProfile();
+        };
+
+        profileDarkModeToggle.onchange = () => { // Sync dark mode from popup to global state
+            isDarkMode = profileDarkModeToggle.checked;
+            applyTheme(); // Apply theme immediately
+            saveUserProfile(); // Save theme preference
+        };
+
+        // --- Initial Setup on Window Load ---
+        window.onload = () => {
+            initializeFirebase(); // Starts Firebase init and auth process
+            applyTheme(); // Apply initial theme based on default isDarkMode state
+        };
+    </script>
+</body>
+</html>
