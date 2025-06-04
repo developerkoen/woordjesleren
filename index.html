@@ -12,6 +12,10 @@
         <img src="logo.png" alt="Codeblocks Logo" class="logo">
         <h1>Leren met Codeblocks</h1>
         <h2>Woordjes</h2>
+        <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle">
+            Donkere modus
+        </label>
         <form id="login-form">
             <div class="input-group">
                 <label for="email">E-mail:</label>
@@ -25,5 +29,12 @@
             <p class="message">Geen account? <a href="#">Registreer hier</a></p>
         </form>
     </div>
+    <script>
+        // Toggle tussen lichte en donkere modus
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+    </script>
 </body>
 </html>
