@@ -1,40 +1,64 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Woordjes Leren App</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
   <style>
+    :root[data-theme='light'] {
+      --bg-color: #f0f4f8;
+      --text-color: #333;
+      --card-bg: #fff;
+      --btn-bg: #4f46e5;
+      --btn-color: white;
+    }
+    :root[data-theme='dark'] {
+      --bg-color: #1e1e2f;
+      --text-color: #e0e0e0;
+      --card-bg: #2e2e3e;
+      --btn-bg: #6366f1;
+      --btn-color: white;
+    }
     body {
       font-family: 'Rubik', sans-serif;
-      background: #f0f4f8;
-      color: #333;
+      background: var(--bg-color);
+      color: var(--text-color);
       margin: 0;
       padding: 0;
     }
     header {
-      background: #4f46e5;
-      color: white;
+      background: var(--btn-bg);
+      color: var(--btn-color);
       padding: 1rem;
       text-align: center;
       font-size: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .theme-toggle {
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1rem;
     }
     .container {
       padding: 2rem;
       max-width: 800px;
       margin: auto;
     }
-    .flashcard, .quiz, .auth {
-      background: white;
+    .flashcard, .quiz, .auth, .profile {
+      background: var(--card-bg);
       border-radius: 12px;
       padding: 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       margin-bottom: 2rem;
     }
     button {
-      background: #4f46e5;
-      color: white;
+      background: var(--btn-bg);
+      color: var(--btn-color);
       padding: 0.5rem 1rem;
       border: none;
       border-radius: 8px;
@@ -51,9 +75,12 @@
   </style>
 </head>
 <body>
-  <header>Woordjes Leren App</header>
+  <header>
+    <span>Woordjes Leren App</span>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+  </header>
   <div class="container">
-    <div class="auth">
+    <div class="auth" id="auth-section">
       <h2>Inloggen</h2>
       <input type="email" id="email" placeholder="E-mail">
       <input type="password" id="password" placeholder="Wachtwoord">
@@ -62,26 +89,33 @@
       <p id="auth-status"></p>
     </div>
 
-    <div class="flashcard">
-      <h2>Flashcard</h2>
-      <p id="flashcard-question">Klik op volgende om te starten</p>
-      <button onclick="showNextFlashcard()">Volgende</button>
-    </div>
+    <div id="main-content" style="display: none">
+      <div class="flashcard">
+        <h2>Flashcard</h2>
+        <p id="flashcard-question">Klik op volgende om te starten</p>
+        <button onclick="showNextFlashcard()">Volgende</button>
+      </div>
 
-    <div class="quiz">
-      <h2>Quiz</h2>
-      <p id="quiz-question">Wat is het Franse woord voor 'appel'?</p>
-      <input type="text" id="quiz-answer" placeholder="Typ je antwoord...">
-      <button onclick="checkAnswer()">Controleer</button>
-      <p id="quiz-feedback"></p>
+      <div class="quiz">
+        <h2>Quiz</h2>
+        <p id="quiz-question">Wat is het Franse woord voor 'appel'?</p>
+        <input type="text" id="quiz-answer" placeholder="Typ je antwoord...">
+        <button onclick="checkAnswer()">Controleer</button>
+        <p id="quiz-feedback"></p>
+      </div>
+
+      <div class="profile">
+        <h2>Profiel</h2>
+        <p id="profile-email"></p>
+        <button onclick="logout()">Uitloggen</button>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB59BVbioUciigC0l47T1tQAsF_kPs2Frs",
@@ -101,7 +135,6 @@
       const password = document.getElementById("password").value;
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        document.getElementById("auth-status").textContent = "Ingelogd als " + email;
       } catch (error) {
         document.getElementById("auth-status").textContent = "Fout bij inloggen: " + error.message;
       }
@@ -112,11 +145,25 @@
       const password = document.getElementById("password").value;
       try {
         await createUserWithEmailAndPassword(auth, email, password);
-        document.getElementById("auth-status").textContent = "Account aangemaakt voor " + email;
       } catch (error) {
         document.getElementById("auth-status").textContent = "Fout bij registratie: " + error.message;
       }
     }
+
+    window.logout = async function () {
+      await signOut(auth);
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("auth-section").style.display = "none";
+        document.getElementById("main-content").style.display = "block";
+        document.getElementById("profile-email").textContent = `Ingelogd als: ${user.email}`;
+      } else {
+        document.getElementById("auth-section").style.display = "block";
+        document.getElementById("main-content").style.display = "none";
+      }
+    });
 
     let flashcards = [
       { nl: "hond", fr: "chien" },
@@ -134,7 +181,7 @@
 
     window.checkAnswer = function () {
       const input = document.getElementById('quiz-answer').value.trim().toLowerCase();
-      const correct = "pomme"; // tijdelijk hardcoded
+      const correct = "pomme";
       const feedback = document.getElementById('quiz-feedback');
       if (input === correct) {
         feedback.textContent = "✅ Correct!";
@@ -164,11 +211,11 @@
       return dp[a.length][b.length];
     }
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("auth-status").textContent = "Ingelogd als: " + user.email;
-      }
-    });
+    window.toggleTheme = function () {
+      const current = document.documentElement.getAttribute("data-theme");
+      const next = current === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+    }
   </script>
 </body>
 </html>
